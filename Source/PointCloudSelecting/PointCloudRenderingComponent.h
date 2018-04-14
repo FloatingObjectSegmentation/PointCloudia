@@ -6,6 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "PointCloud.h"
 #include "PointCloudHelper.h"
+#include "PointCloudActor.h"
+#include "Engine/World.h"
 #include "PointCloudRenderingComponent.generated.h"
 
 
@@ -22,8 +24,16 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
+	void LoadPointCloudPointsFromFile(TArray<FPointCloudPoint> &LoadedPoints);
+
+	void FixPointColors(TArray<FPointCloudPoint> &LoadedPoints);
+
+	void NormalizePointLocations(TArray<FPointCloudPoint> &LoadedPoints);
+
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+private:
+	APointCloudActor * PointCloudHostActor;
 };
