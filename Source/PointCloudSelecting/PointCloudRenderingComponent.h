@@ -24,9 +24,11 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-	void LoadPointCloudPointsFromFile(TArray<FPointCloudPoint> &LoadedPoints);
+	UPointCloud* PreparePointCloud(TArray<FPointCloudPoint> &LoadedPoints);
 
-	void FixPointColors(TArray<FPointCloudPoint> &LoadedPoints);
+	void SpawnPointCloudHostActor(FTransform &SpawningTransform);
+
+	void LoadPointCloudPointsFromFile(TArray<FPointCloudPoint> &LoadedPoints);
 
 	void NormalizePointLocations(TArray<FPointCloudPoint> &LoadedPoints);
 

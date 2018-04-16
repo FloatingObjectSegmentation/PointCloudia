@@ -22,36 +22,35 @@ void UPointCloudRenderingComponent::BeginPlay()
 
 	TArray<FPointCloudPoint> LoadedPoints;
 	LoadPointCloudPointsFromFile(LoadedPoints);
+	NormalizePointLocations(LoadedPoints); // we want them in sensible unreal coords not LAS coords
+	UPointCloud* PointCloud = PreparePointCloud(LoadedPoints); // use a predefined configuration (for now)
+	SpawnPointCloudHostActor(FTransform(FVector(0.0f)));
+	PointCloudHostActor->SetPointCloud(PointCloud);
 
-	//FixPointColors(LoadedPoints);
-	NormalizePointLocations(LoadedPoints);
+	UE_LOG(LogTemp, Warning, TEXT("Point loaded %s"), *LoadedPoints[0].Color.ToString());
+}
 
-	
-	FTransform SpawningTransform;
-	FVector SpawningLocation(0.0f, 0.0f, 0.0f);
-	SpawningTransform.SetLocation(SpawningLocation);
+UPointCloud* UPointCloudRenderingComponent::PreparePointCloud(TArray<FPointCloudPoint> &LoadedPoints)
+{
+	UPointCloud* PointCloud = NewObject<UPointCloud>(this->StaticClass(), TEXT("PointCloud"));
+	UPointCloudSettings* PointCloudSettings = NewObject<UPointCloudSettings>(this->StaticClass(), TEXT("PointCloudSettings"));
+	PointCloudSettings->RenderMethod = EPointCloudRenderMethod::Sprite_Unlit_RGB;
+	PointCloudSettings->SpriteSize = FVector2D(0.4f, 0.4f);
+	PointCloudSettings->Scale = FVector(1.0f);
+	PointCloudSettings->Brightness = 8.f;
+	PointCloudSettings->Saturation = 4.5f;
+	PointCloudSettings->SectionSize = FVector(100.f);
+	PointCloud->SetSettings(PointCloudSettings);
+	PointCloud->SetPointCloudData(LoadedPoints, true);
+	return PointCloud;
+}
 
+void UPointCloudRenderingComponent::SpawnPointCloudHostActor(FTransform &SpawningTransform)
+{
 	UClass* param = APointCloudActor::StaticClass();
 	AActor* spawned = GetWorld()->SpawnActor(param, &SpawningTransform, FActorSpawnParameters());
 	FVector f = spawned->GetActorLocation();
 	PointCloudHostActor = dynamic_cast<APointCloudActor*>(spawned);
-
-	UE_LOG(LogTemp, Warning, TEXT("Point loaded %s"), *LoadedPoints[0].Color.ToString());
-
-	UPointCloud* PointCloud = NewObject<UPointCloud>(this->StaticClass(), TEXT("PointCloud"));
-	UPointCloudSettings* PointCloudSettings = NewObject<UPointCloudSettings>(this->StaticClass(), TEXT("PointCloudSettings"));
-	PointCloudSettings->RenderMethod = EPointCloudRenderMethod::Sprite_Lit_RGB;
-	PointCloudSettings->SpriteSize = FVector2D(0.5f, 0.5f);
-	PointCloudSettings->Scale = FVector(1.0f);
-	PointCloudSettings->Brightness = 1.5f;
-
-	PointCloud->SetSettings(PointCloudSettings);
-	PointCloud->SetPointCloudData(LoadedPoints, true);
-	PointCloudHostActor->SetPointCloud(PointCloud);
-
-
-	int32 NumberOfPoints = LoadedPoints.Num();
-	UE_LOG(LogTemp, Warning, TEXT("PointCloudLoaded %d"), NumberOfPoints);
 }
 
 void UPointCloudRenderingComponent::LoadPointCloudPointsFromFile(TArray<FPointCloudPoint> &LoadedPoints)
@@ -67,15 +66,6 @@ void UPointCloudRenderingComponent::LoadPointCloudPointsFromFile(TArray<FPointCl
 	Header.SelectedColumns = SelectedColumns;
 
 	FPointCloudHelper::ImportAsText(TEXT("C:\\Users\\km\\Desktop\\graphics\\data\\slama.txt"), LoadedPoints, Mode, 0, 50000000, Header); 
-}
-
-void UPointCloudRenderingComponent::FixPointColors(TArray<FPointCloudPoint> &LoadedPoints)
-{
-	for (int32 i = 0; i < LoadedPoints.Num(); i++) {
-		LoadedPoints[i].Color.R = 128;
-		LoadedPoints[i].Color.G = 128;
-		LoadedPoints[i].Color.B = 128;
-	}
 }
 
 void UPointCloudRenderingComponent::NormalizePointLocations(TArray<FPointCloudPoint> &LoadedPoints)
