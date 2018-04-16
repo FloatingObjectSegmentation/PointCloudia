@@ -23,7 +23,7 @@ void UPointCloudRenderingComponent::BeginPlay()
 	TArray<FPointCloudPoint> LoadedPoints;
 	LoadPointCloudPointsFromFile(LoadedPoints);
 
-	FixPointColors(LoadedPoints);
+	//FixPointColors(LoadedPoints);
 	NormalizePointLocations(LoadedPoints);
 
 	
@@ -36,7 +36,16 @@ void UPointCloudRenderingComponent::BeginPlay()
 	FVector f = spawned->GetActorLocation();
 	PointCloudHostActor = dynamic_cast<APointCloudActor*>(spawned);
 
+	UE_LOG(LogTemp, Warning, TEXT("Point loaded %s"), *LoadedPoints[0].Color.ToString());
+
 	UPointCloud* PointCloud = NewObject<UPointCloud>(this->StaticClass(), TEXT("PointCloud"));
+	UPointCloudSettings* PointCloudSettings = NewObject<UPointCloudSettings>(this->StaticClass(), TEXT("PointCloudSettings"));
+	PointCloudSettings->RenderMethod = EPointCloudRenderMethod::Sprite_Lit_RGB;
+	PointCloudSettings->SpriteSize = FVector2D(0.5f, 0.5f);
+	PointCloudSettings->Scale = FVector(1.0f);
+	PointCloudSettings->Brightness = 1.5f;
+
+	PointCloud->SetSettings(PointCloudSettings);
 	PointCloud->SetPointCloudData(LoadedPoints, true);
 	PointCloudHostActor->SetPointCloud(PointCloud);
 
@@ -49,6 +58,7 @@ void UPointCloudRenderingComponent::LoadPointCloudPointsFromFile(TArray<FPointCl
 {
 	EPointCloudColorMode Mode = EPointCloudColorMode::RGB;
 	FPointCloudFileHeader Header = FPointCloudHelper::ReadFileHeader(TEXT("C:\\Users\\km\\Desktop\\graphics\\data\\slama.txt"));
+	Header.RGBRange = FVector2D(0.0f, 256.0f * 256.0f - 1.0f);
 
 	TArray<int32> SelectedColumns;
 	for (int32 i = 0; i < 6; i++) {
@@ -56,7 +66,7 @@ void UPointCloudRenderingComponent::LoadPointCloudPointsFromFile(TArray<FPointCl
 	}
 	Header.SelectedColumns = SelectedColumns;
 
-	FPointCloudHelper::ImportAsText(TEXT("C:\\Users\\km\\Desktop\\graphics\\data\\slama.txt"), LoadedPoints, Mode, 0, 10000000, Header);
+	FPointCloudHelper::ImportAsText(TEXT("C:\\Users\\km\\Desktop\\graphics\\data\\slama.txt"), LoadedPoints, Mode, 0, 50000000, Header); 
 }
 
 void UPointCloudRenderingComponent::FixPointColors(TArray<FPointCloudPoint> &LoadedPoints)
