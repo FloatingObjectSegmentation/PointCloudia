@@ -4,8 +4,19 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/World.h"
+#include "Engine/WorldComposition.h"
+#include "GameFramework/Actor.h"
 #include "SelectionMachineComponent.generated.h"
 
+UENUM(BlueprintType)		//"BlueprintType" is essential to include
+enum class ETransformEnum : uint8
+{
+	Translation 	UMETA(DisplayName = "Translation"),
+	Rotation    	UMETA(DisplayName = "Rotation"),
+	Scaling  	    UMETA(DisplayName = "Scaling")
+};
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class POINTCLOUDSELECTING_API USelectionMachineComponent : public UActorComponent
@@ -25,8 +36,18 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 private:
+	UPROPERTY(EditAnywhere)
+	ETransformEnum TransformMode;
+
+	UPROPERTY(EditAnywhere)
+	AActor* BoundingBox;
+
+	UPROPERTY(EditAnywhere)
+	UStaticMesh *DesiredStaticMesh;
+
+public:
 	UFUNCTION(BlueprintCallable, Category = "Performance")
-	void SetMode();
+	void SetMode(ETransformEnum tmode);
 
 	UFUNCTION(BlueprintCallable, Category = "Performance")
 	void StartSelection();
