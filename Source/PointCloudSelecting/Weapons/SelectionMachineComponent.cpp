@@ -91,9 +91,11 @@ void USelectionMachineComponent::TransformX(int32 way) {
 		break;
 
 	case ETransformEnum::Rotation:
+		BoundingBox->SetActorRotation(BoundingBox->GetActorRotation() + FRotator(way, 0, 0) * Speed);
 		break;
 
 	case ETransformEnum::Scaling:
+		BoundingBox->SetActorScale3D(BoundingBox->GetActorScale3D() + FVector(way, 0, 0) * Speed * 0.01f);
 		break;
 	}
 }
@@ -108,9 +110,11 @@ void USelectionMachineComponent::TransformY(int32 way) {
 		break;
 
 	case ETransformEnum::Rotation:
+		BoundingBox->SetActorRotation(BoundingBox->GetActorRotation() + FRotator(0, way, 0) * Speed);
 		break;
 
 	case ETransformEnum::Scaling:
+		BoundingBox->SetActorScale3D(BoundingBox->GetActorScale3D() + FVector(0, way, 0) * Speed * 0.01f);
 		break;
 	}
 }
@@ -125,9 +129,11 @@ void USelectionMachineComponent::TransformZ(int32 way) {
 		break;
 
 	case ETransformEnum::Rotation:
+		BoundingBox->SetActorRotation(BoundingBox->GetActorRotation() + FRotator(0, 0, way) * Speed);
 		break;
 
 	case ETransformEnum::Scaling:
+		BoundingBox->SetActorScale3D(BoundingBox->GetActorScale3D() + FVector(0, 0, way) * Speed * 0.01f);
 		break;
 	}
 }
