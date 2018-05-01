@@ -45,7 +45,7 @@ UPointCloud* UPointCloudRenderingComponent::PreparePointCloud(TArray<FPointCloud
 	return PointCloud;
 }
 
-void UPointCloudRenderingComponent::SpawnPointCloudHostActor(FTransform &SpawningTransform)
+void UPointCloudRenderingComponent::SpawnPointCloudHostActor(FTransform const &SpawningTransform)
 {
 	UClass* param = APointCloudActor::StaticClass();
 	AActor* spawned = GetWorld()->SpawnActor(param, &SpawningTransform, FActorSpawnParameters());
@@ -55,8 +55,9 @@ void UPointCloudRenderingComponent::SpawnPointCloudHostActor(FTransform &Spawnin
 
 void UPointCloudRenderingComponent::LoadPointCloudPointsFromFile(TArray<FPointCloudPoint> &LoadedPoints)
 {
+	
 	EPointCloudColorMode Mode = EPointCloudColorMode::RGB;
-	FPointCloudFileHeader Header = FPointCloudHelper::ReadFileHeader(TEXT("C:\\Users\\km\\Desktop\\graphics\\data\\slama.txt"));
+	FPointCloudFileHeader Header = FPointCloudHelper::ReadFileHeader(TEXT("C:\\Users\\km\\Desktop\\graphics\\data\\simon.txt"));
 	Header.RGBRange = FVector2D(0.0f, 256.0f * 256.0f - 1.0f);
 
 	TArray<int32> SelectedColumns;
@@ -65,22 +66,44 @@ void UPointCloudRenderingComponent::LoadPointCloudPointsFromFile(TArray<FPointCl
 	}
 	Header.SelectedColumns = SelectedColumns;
 
-	FPointCloudHelper::ImportAsText(TEXT("C:\\Users\\km\\Desktop\\graphics\\data\\slama.txt"), LoadedPoints, Mode, 0, 50000000, Header); 
+	FPointCloudHelper::ImportAsText(TEXT("C:\\Users\\km\\Desktop\\graphics\\data\\simon.txt"), LoadedPoints, Mode, 0, 500000000, Header); 
 }
 
 void UPointCloudRenderingComponent::NormalizePointLocations(TArray<FPointCloudPoint> &LoadedPoints)
 {
+	
 	int MinX = INT32_MAX, MinY = INT32_MAX, MinZ = INT32_MAX;
+	int MaxX = INT32_MIN, MaxY = INT32_MIN, MaxZ = INT32_MIN;
 	for (int32 i = 0; i < LoadedPoints.Num(); i++) {
 		if (LoadedPoints[i].Location.X < MinX) MinX = LoadedPoints[i].Location.X;
 		if (LoadedPoints[i].Location.Y < MinY) MinY = LoadedPoints[i].Location.Y;
 		if (LoadedPoints[i].Location.Z < MinZ) MinZ = LoadedPoints[i].Location.Z;
+
+		if (LoadedPoints[i].Location.X > MaxX) MaxX = LoadedPoints[i].Location.X;
+		if (LoadedPoints[i].Location.Y > MaxY) MaxY = LoadedPoints[i].Location.Y;
+		if (LoadedPoints[i].Location.Z > MaxZ) MaxZ = LoadedPoints[i].Location.Z;
 	}
 	for (int32 i = 0; i < LoadedPoints.Num(); i++) {
 		LoadedPoints[i].Location.X -= MinX;
 		LoadedPoints[i].Location.Y -= MinY;
 		LoadedPoints[i].Location.Z -= MinZ;
 	}
+	MaxX = MaxX - MinX;
+	// MaxY = MaxY - MinY;	
+
+	for (int32 i = 0; i < LoadedPoints.Num(); i++) {
+		LoadedPoints[i].Location.X = MaxX - LoadedPoints[i].Location.X;
+		// LoadedPoints[i].Location.Y = MaxY - LoadedPoints[i].Location.Y;
+		
+	}
+
+	for (int32 i = 0; i < LoadedPoints.Num(); i++) {
+		LoadedPoints[i].Location.X *= 1.0f;
+		LoadedPoints[i].Location.Y *= 1.0f;
+		LoadedPoints[i].Location.Z *= 1.0f;
+	}
+
+	
 }
 
 

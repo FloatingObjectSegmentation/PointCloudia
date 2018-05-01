@@ -26,7 +26,7 @@ protected:
 
 	UPointCloud* PreparePointCloud(TArray<FPointCloudPoint> &LoadedPoints);
 
-	void SpawnPointCloudHostActor(FTransform &SpawningTransform);
+	void SpawnPointCloudHostActor(FTransform const &SpawningTransform);
 
 	void LoadPointCloudPointsFromFile(TArray<FPointCloudPoint> &LoadedPoints);
 
