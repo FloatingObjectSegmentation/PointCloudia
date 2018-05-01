@@ -20,12 +20,16 @@ void USelectionMachineComponent::BeginPlay()
 	Super::BeginPlay();
 
 	BoundingBox = nullptr;
+	TransformMode = ETransformEnum::Translation;
+	Speed = 5.0f;
+
+
+	// find the static mesh actor and static mesh component
 	TSubclassOf<AActor> ClassToFind = AStaticMeshActor::StaticClass(); // Needs to be populated somehow (e.g. by exposing to blueprints as uproperty and setting it there
 
 	TArray<AActor*> FoundActors;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ClassToFind, FoundActors);
 
-	
 	// Get the static mesh component from some cube in the scene
 	for (int32 i = 0; i < FoundActors.Num(); i++) {
 		FString str = FoundActors[i]->GetActorLabel();
@@ -77,11 +81,13 @@ void USelectionMachineComponent::StartSelection() {
 	BoundingBox = spawned;
 }
 
-void USelectionMachineComponent::TransformX() {
-	// there is a mapping to this function. Transforms the X component of the BoundingBox
+void USelectionMachineComponent::TransformX(int32 way) {
+	
+	if (BoundingBox == nullptr) return;
 
 	switch (TransformMode) {
 	case ETransformEnum::Translation:
+		BoundingBox->SetActorLocation(BoundingBox->GetActorLocation() + FVector(way, 0, 0) * Speed);
 		break;
 
 	case ETransformEnum::Rotation:
@@ -92,9 +98,13 @@ void USelectionMachineComponent::TransformX() {
 	}
 }
 
-void USelectionMachineComponent::TransformY() {
+void USelectionMachineComponent::TransformY(int32 way) {
+
+	if (BoundingBox == nullptr) return;
+
 	switch (TransformMode) {
 	case ETransformEnum::Translation:
+		BoundingBox->SetActorLocation(BoundingBox->GetActorLocation() + FVector(0, way, 0) * Speed);
 		break;
 
 	case ETransformEnum::Rotation:
@@ -105,9 +115,13 @@ void USelectionMachineComponent::TransformY() {
 	}
 }
 
-void USelectionMachineComponent::TransformZ() {
+void USelectionMachineComponent::TransformZ(int32 way) {
+
+	if (BoundingBox == nullptr) return;
+
 	switch (TransformMode) {
 	case ETransformEnum::Translation:
+		BoundingBox->SetActorLocation(BoundingBox->GetActorLocation() + FVector(0, 0, way) * Speed);
 		break;
 
 	case ETransformEnum::Rotation:

@@ -44,23 +44,24 @@ public:
 	AActor* BoundingBox;
 	AActor* DesiredBBActor;
 	UStaticMesh *DesiredStaticMesh;
+	float Speed;
 
 public:
-	UFUNCTION(BlueprintCallable, Category = "Performance")
+	UFUNCTION(BlueprintCallable)
 	void SetMode(ETransformEnum tmode);
 
-	UFUNCTION(BlueprintCallable, Category = "Performance")
+	UFUNCTION(BlueprintCallable)
 	void StartSelection();
 
-	UFUNCTION(BlueprintCallable, Category = "Performance")
+	UFUNCTION(BlueprintCallable)
 	void FinishSelection();
 
-	UFUNCTION(BlueprintCallable, Category = "Performance")
-	void TransformX();
+	UFUNCTION(BlueprintCallable)
+	void TransformX(int32 way);
 
-	UFUNCTION(BlueprintCallable, Category = "Performance")
-	void TransformY();
+	UFUNCTION(BlueprintCallable)
+	void TransformY(int32 way);
 
-	UFUNCTION(BlueprintCallable, Category = "Performance")
-	void TransformZ();
+	UFUNCTION(BlueprintCallable)
+	void TransformZ(int32 way);
 };
