@@ -5,9 +5,11 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMeshActor.h"
 #include "Engine/World.h"
 #include "Engine/WorldComposition.h"
 #include "GameFramework/Actor.h"
+#include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
 #include "SelectionMachineComponent.generated.h"
 
 UENUM(BlueprintType)		//"BlueprintType" is essential to include
@@ -35,14 +37,12 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-private:
-	UPROPERTY(EditAnywhere)
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	ETransformEnum TransformMode;
 
-	UPROPERTY(EditAnywhere)
 	AActor* BoundingBox;
-
-	UPROPERTY(EditAnywhere)
+	AActor* DesiredBBActor;
 	UStaticMesh *DesiredStaticMesh;
 
 public:

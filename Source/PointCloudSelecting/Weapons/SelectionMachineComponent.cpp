@@ -13,24 +13,41 @@ USelectionMachineComponent::USelectionMachineComponent()
 	// ...
 }
 
-
+#pragma region unreal events
 // Called when the game starts
 void USelectionMachineComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ...
+	BoundingBox = nullptr;
+	TSubclassOf<AActor> ClassToFind = AStaticMeshActor::StaticClass(); // Needs to be populated somehow (e.g. by exposing to blueprints as uproperty and setting it there
+
+	TArray<AActor*> FoundActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ClassToFind, FoundActors);
+
+	
+	// Get the static mesh component from some cube in the scene
+	for (int32 i = 0; i < FoundActors.Num(); i++) {
+		FString str = FoundActors[i]->GetActorLabel();
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *str);
+		if (str.Contains(TEXT("Cube"))) {
+			BoundingBox = FoundActors[i];
+			TArray<UStaticMeshComponent*> Components;
+			FoundActors[i]->GetComponents<UStaticMeshComponent>(Components);
+			if (Components.Num() > 0) {
+				DesiredStaticMesh = Components[0]->GetStaticMesh();
+			}
+			break;
+		}
+	}
 	
 }
 
-
-// Called every frame
 void USelectionMachineComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
 }
+#pragma endregion
 
 #pragma region Blueprint API
 void USelectionMachineComponent::SetMode(ETransformEnum transformMode) {
@@ -40,11 +57,12 @@ void USelectionMachineComponent::SetMode(ETransformEnum transformMode) {
 void USelectionMachineComponent::StartSelection() {
 	// spawn a BoundingBox and hold a reference to it. Spawn it about 10 meters in front of the camera.
 
+
 	FVector SpawningLocation = GetOwner()->GetActorLocation() + 50.0f * GetOwner()->GetActorForwardVector();
 	FTransform SpawningTransform;
 	SpawningTransform.SetLocation(SpawningLocation);
 
-	UClass* param = BoundingBox->GetClass();
+	UClass* param = AStaticMeshActor::StaticClass();
 	AActor* spawned = GetWorld()->SpawnActor(param, &SpawningTransform, FActorSpawnParameters());
 	FVector f = spawned->GetActorLocation();
 
@@ -55,6 +73,8 @@ void USelectionMachineComponent::StartSelection() {
 		StaticMeshComponent->SetMobility(EComponentMobility::Movable);
 		StaticMeshComponent->SetStaticMesh(DesiredStaticMesh);
 	}
+	
+	BoundingBox = spawned;
 }
 
 void USelectionMachineComponent::TransformX() {
