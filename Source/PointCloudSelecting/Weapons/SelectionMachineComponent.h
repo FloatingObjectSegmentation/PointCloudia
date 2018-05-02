@@ -8,8 +8,11 @@
 #include "Engine/StaticMeshActor.h"
 #include "Engine/World.h"
 #include "Engine/WorldComposition.h"
+#include "Engine/StaticMesh.h"
+#include "Runtime/Engine/Classes/Materials/Material.h"
 #include "GameFramework/Actor.h"
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
+#include "Runtime/Engine/Classes/Materials/MaterialInstanceDynamic.h"
 #include "SelectionMachineComponent.generated.h"
 
 UENUM(BlueprintType)		//"BlueprintType" is essential to include
@@ -25,6 +28,7 @@ class POINTCLOUDSELECTING_API USelectionMachineComponent : public UActorComponen
 {
 	GENERATED_BODY()
 
+// UNREAL DEFAULT
 public:	
 	// Sets default values for this component's properties
 	USelectionMachineComponent();
@@ -33,31 +37,33 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-	void InitializeBoundingBoxAttributes();
-
-	void SetBoundingBoxProperties(TArray<AActor *> &FoundActors);
-
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+
+
+// VARIABLES
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	ETransformEnum TransformMode;
 
-	AActor* BoundingBox;
-	AActor* DesiredBBActor;
-	UStaticMesh *DesiredStaticMesh;
+private:
 	float Speed;
 
+	AActor* BoundingBox;
+	UStaticMeshComponent* BBStaticMeshComponent;
+	FString BBMaterialPath;
+
+	UStaticMesh *DesiredStaticMesh; // bounding box template - it will be spawned using this object
+
+// METHODS
 public:
 	UFUNCTION(BlueprintCallable)
 	void SetMode(ETransformEnum tmode);
 
 	UFUNCTION(BlueprintCallable)
 	void StartSelection();
-
-	void SetBoundingBoxAttributes();
 
 	UFUNCTION(BlueprintCallable)
 	void FinishSelection();
@@ -72,6 +78,11 @@ public:
 	void TransformZ(int32 way);
 
 private:
+	void SetBoundingBoxAttributes();
+	UMaterialInstanceDynamic* GetMaterialInstance();
 	AActor * SpawnBoundingBox();
 	void CommitTransformation(FVector trans);
+	void InitializeBoundingBoxTemplate();
+	void FindTemplateMesh(TArray<AActor *> &FoundActors);
+	void ExtractStaticMeshFromActor(TArray<AActor *> & FoundActors, const int32 &i);
 };

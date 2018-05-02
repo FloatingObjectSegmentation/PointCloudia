@@ -17,8 +17,9 @@ void USelectionMachineComponent::BeginPlay()
 	BoundingBox = nullptr;
 	TransformMode = ETransformEnum::Translation;
 	Speed = 5.0f;
+	BBMaterialPath = TEXT("/Game/Materials/ParameterizedTranslucent"); // Referencing assets in UE4 code: Game refers to the content folder...
 
-	InitializeBoundingBoxAttributes();
+	InitializeBoundingBoxTemplate();
 }
 
 void USelectionMachineComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -37,17 +38,6 @@ void USelectionMachineComponent::StartSelection()
 {
 	BoundingBox = SpawnBoundingBox();
 	SetBoundingBoxAttributes();
-}
-
-AActor* USelectionMachineComponent::SpawnBoundingBox()
-{
-	FVector SpawningLocation = GetOwner()->GetActorLocation() + 50.0f * GetOwner()->GetActorForwardVector();
-	FTransform SpawningTransform;
-	SpawningTransform.SetLocation(SpawningLocation);
-
-	UClass* param = AStaticMeshActor::StaticClass();
-	AActor* spawned = GetWorld()->SpawnActor(param, &SpawningTransform, FActorSpawnParameters());
-	return spawned;
 }
 
 void USelectionMachineComponent::TransformX(int32 way) 
@@ -79,33 +69,46 @@ void USelectionMachineComponent::FinishSelection()
 #pragma endregion
 
 #pragma region auxiliary
-void USelectionMachineComponent::InitializeBoundingBoxAttributes()
+AActor* USelectionMachineComponent::SpawnBoundingBox()
+{
+	FVector SpawningLocation = GetOwner()->GetActorLocation() + 50.0f * GetOwner()->GetActorForwardVector();
+	FTransform SpawningTransform;
+	SpawningTransform.SetLocation(SpawningLocation);
+
+	UClass* param = AStaticMeshActor::StaticClass();
+	AActor* spawned = GetWorld()->SpawnActor(param, &SpawningTransform, FActorSpawnParameters());
+	return spawned;
+}
+
+void USelectionMachineComponent::InitializeBoundingBoxTemplate()
 {
 	TSubclassOf<AActor> ClassToFind = AStaticMeshActor::StaticClass();
-
 	TArray<AActor*> FoundActors;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ClassToFind, FoundActors);
 
-	SetBoundingBoxProperties(FoundActors);
+	FindTemplateMesh(FoundActors);
 }
 
-void USelectionMachineComponent::SetBoundingBoxProperties(TArray<AActor *> &FoundActors)
+void USelectionMachineComponent::FindTemplateMesh(TArray<AActor *> &FoundActors)
 {
 	// This is a temporary and bad solution - it absolutely requires a simple cube to be
 	// in the scene.
 	
 	for (int32 i = 0; i < FoundActors.Num(); i++) {
 		FString str = FoundActors[i]->GetActorLabel();
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *str);
-		if (str.Contains(TEXT("Cube"))) {
-			BoundingBox = FoundActors[i];
-			TArray<UStaticMeshComponent*> Components;
-			FoundActors[i]->GetComponents<UStaticMeshComponent>(Components);
-			if (Components.Num() > 0) {
-				DesiredStaticMesh = Components[0]->GetStaticMesh();
-			}
+		if (str.Contains(TEXT("Cube"))) {		
+			ExtractStaticMeshFromActor(FoundActors, i);
 			break;
 		}
+	}
+}
+
+void USelectionMachineComponent::ExtractStaticMeshFromActor(TArray<AActor *> & FoundActors, const int32 &i)
+{
+	TArray<UStaticMeshComponent*> Components;
+	FoundActors[i]->GetComponents<UStaticMeshComponent>(Components);
+	if (Components.Num() > 0) {
+		DesiredStaticMesh = Components[0]->GetStaticMesh();
 	}
 }
 
@@ -117,7 +120,20 @@ void USelectionMachineComponent::SetBoundingBoxAttributes()
 		UStaticMeshComponent* StaticMeshComponent = Components[i];
 		StaticMeshComponent->SetMobility(EComponentMobility::Movable);
 		StaticMeshComponent->SetStaticMesh(DesiredStaticMesh);
+
+		// set the target material
+		UMaterialInstanceDynamic* MaterialInstance = GetMaterialInstance();
+		StaticMeshComponent->SetMaterial(0, MaterialInstance);
 	}
+}
+
+UMaterialInstanceDynamic* USelectionMachineComponent::GetMaterialInstance()
+{
+	UE_LOG(LogTemp, Warning, TEXT("SOME CUBE FOUND LEL"));
+	UMaterial* mat = LoadObject<UMaterial>(UMaterial::StaticClass(), *BBMaterialPath);
+	UMaterialInstanceDynamic* MaterialInstance = UMaterialInstanceDynamic::Create(mat, mat);
+	MaterialInstance->SetScalarParameterValue(TEXT("Opacity"), 0.6f);
+	return MaterialInstance;
 }
 
 void USelectionMachineComponent::CommitTransformation(FVector trans)
