@@ -33,6 +33,10 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
+	void InitializeBoundingBoxAttributes();
+
+	void SetBoundingBoxProperties(TArray<AActor *> &FoundActors);
+
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -53,6 +57,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void StartSelection();
 
+	void SetBoundingBoxAttributes();
+
 	UFUNCTION(BlueprintCallable)
 	void FinishSelection();
 
@@ -64,4 +70,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void TransformZ(int32 way);
+
+private:
+	AActor * SpawnBoundingBox();
+	void CommitTransformation(FVector& trans);
 };
