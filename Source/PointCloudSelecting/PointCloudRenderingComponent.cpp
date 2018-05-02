@@ -15,22 +15,60 @@ UPointCloudRenderingComponent::UPointCloudRenderingComponent()
 }
 
 
-// Called when the game starts
+#pragma region unreal events
 void UPointCloudRenderingComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
 	TArray<FPointCloudPoint> LoadedPoints;
-	LoadPointCloudPointsFromFile(LoadedPoints);
-	NormalizePointLocations(LoadedPoints); // we want them in sensible unreal coords not LAS coords
-	UPointCloud* PointCloud = PreparePointCloud(LoadedPoints); // use a predefined configuration (for now)
+	LoadPointsFromFile(LoadedPoints);
+	SpaceTransformPCToLocal(LoadedPoints);
+	UPointCloud* PointCloud = PrepareRenderingSettings(LoadedPoints); // use a predefined configuration (for now)
 	SpawnPointCloudHostActor(FTransform(FVector(0.0f)));
 	PointCloudHostActor->SetPointCloud(PointCloud);
 
 	UE_LOG(LogTemp, Warning, TEXT("Point loaded %s"), *LoadedPoints[0].Color.ToString());
 }
 
-UPointCloud* UPointCloudRenderingComponent::PreparePointCloud(TArray<FPointCloudPoint> &LoadedPoints)
+void UPointCloudRenderingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+}
+#pragma endregion
+
+#pragma region API
+
+void UPointCloudRenderingComponent::SpaceTransformPCToLocal(TArray<FPointCloudPoint> &LoadedPoints) {
+
+	// It appears that it needs to be reflected through the X axis to be correctly visualized.
+	// Something may be wrong in the transformation, but as long as we are getting the correct
+	// object out, it will suffice for this application.
+
+	int MaxX = INT32_MIN, MinY = INT32_MAX, MinZ = INT32_MAX;
+	for (int32 i = 0; i < LoadedPoints.Num(); i++) {
+		if (LoadedPoints[i].Location.X > MaxX) MaxX = LoadedPoints[i].Location.X; // reflect through X axis
+		if (LoadedPoints[i].Location.Y < MinY) MinY = LoadedPoints[i].Location.Y;
+		if (LoadedPoints[i].Location.Z < MinZ) MinZ = LoadedPoints[i].Location.Z;
+	}
+	for (int32 i = 0; i < LoadedPoints.Num(); i++) {
+		LoadedPoints[i].Location.X = MaxX - LoadedPoints[i].Location.X;
+		LoadedPoints[i].Location.Y -= MinY;
+		LoadedPoints[i].Location.Z -= MinZ;
+	}
+	
+}
+
+void UPointCloudRenderingComponent::SpaceTransformLocalToPC(TArray<FPointCloudPoint> &LoadedPoints) {
+	// TODO
+}
+
+void UPointCloudRenderingComponent::SpaceTransformWorldToPC(TArray<FPointCloudPoint> &LoadedPoints) {
+	// TODO
+}
+#pragma endregion
+
+#pragma region auxiliary
+UPointCloud* UPointCloudRenderingComponent::PrepareRenderingSettings(TArray<FPointCloudPoint> &LoadedPoints)
 {
 	UPointCloud* PointCloud = NewObject<UPointCloud>(this->StaticClass(), TEXT("PointCloud"));
 	UPointCloudSettings* PointCloudSettings = NewObject<UPointCloudSettings>(this->StaticClass(), TEXT("PointCloudSettings"));
@@ -53,7 +91,7 @@ void UPointCloudRenderingComponent::SpawnPointCloudHostActor(FTransform const &S
 	PointCloudHostActor = dynamic_cast<APointCloudActor*>(spawned);
 }
 
-void UPointCloudRenderingComponent::LoadPointCloudPointsFromFile(TArray<FPointCloudPoint> &LoadedPoints)
+void UPointCloudRenderingComponent::LoadPointsFromFile(TArray<FPointCloudPoint> &LoadedPoints)
 {
 	
 	EPointCloudColorMode Mode = EPointCloudColorMode::RGB;
@@ -68,49 +106,4 @@ void UPointCloudRenderingComponent::LoadPointCloudPointsFromFile(TArray<FPointCl
 
 	FPointCloudHelper::ImportAsText(TEXT("C:\\Users\\km\\Desktop\\graphics\\data\\simon.txt"), LoadedPoints, Mode, 0, 500000000, Header); 
 }
-
-void UPointCloudRenderingComponent::NormalizePointLocations(TArray<FPointCloudPoint> &LoadedPoints)
-{
-	
-	int MinX = INT32_MAX, MinY = INT32_MAX, MinZ = INT32_MAX;
-	int MaxX = INT32_MIN, MaxY = INT32_MIN, MaxZ = INT32_MIN;
-	for (int32 i = 0; i < LoadedPoints.Num(); i++) {
-		if (LoadedPoints[i].Location.X < MinX) MinX = LoadedPoints[i].Location.X;
-		if (LoadedPoints[i].Location.Y < MinY) MinY = LoadedPoints[i].Location.Y;
-		if (LoadedPoints[i].Location.Z < MinZ) MinZ = LoadedPoints[i].Location.Z;
-
-		if (LoadedPoints[i].Location.X > MaxX) MaxX = LoadedPoints[i].Location.X;
-		if (LoadedPoints[i].Location.Y > MaxY) MaxY = LoadedPoints[i].Location.Y;
-		if (LoadedPoints[i].Location.Z > MaxZ) MaxZ = LoadedPoints[i].Location.Z;
-	}
-	for (int32 i = 0; i < LoadedPoints.Num(); i++) {
-		LoadedPoints[i].Location.X -= MinX;
-		LoadedPoints[i].Location.Y -= MinY;
-		LoadedPoints[i].Location.Z -= MinZ;
-	}
-	MaxX = MaxX - MinX;
-	// MaxY = MaxY - MinY;	
-
-	for (int32 i = 0; i < LoadedPoints.Num(); i++) {
-		LoadedPoints[i].Location.X = MaxX - LoadedPoints[i].Location.X;
-		// LoadedPoints[i].Location.Y = MaxY - LoadedPoints[i].Location.Y;
-		
-	}
-
-	for (int32 i = 0; i < LoadedPoints.Num(); i++) {
-		LoadedPoints[i].Location.X *= 1.0f;
-		LoadedPoints[i].Location.Y *= 1.0f;
-		LoadedPoints[i].Location.Z *= 1.0f;
-	}
-
-	
-}
-
-
-// Called every frame
-void UPointCloudRenderingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	// ...
-}
-
+#pragma endregion

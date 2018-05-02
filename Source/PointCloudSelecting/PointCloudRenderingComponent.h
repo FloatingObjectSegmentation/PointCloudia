@@ -16,26 +16,31 @@ class POINTCLOUDSELECTING_API UPointCloudRenderingComponent : public UActorCompo
 {
 	GENERATED_BODY()
 
+private:
+	APointCloudActor * PointCloudHostActor;
+
 public:	
-	// Sets default values for this component's properties
 	UPointCloudRenderingComponent();
 
 protected:
-	// Called when the game starts
 	virtual void BeginPlay() override;
 
-	UPointCloud* PreparePointCloud(TArray<FPointCloudPoint> &LoadedPoints);
-
-	void SpawnPointCloudHostActor(FTransform const &SpawningTransform);
-
-	void LoadPointCloudPointsFromFile(TArray<FPointCloudPoint> &LoadedPoints);
-
-	void NormalizePointLocations(TArray<FPointCloudPoint> &LoadedPoints);
-
 public:	
-	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-private:
-	APointCloudActor * PointCloudHostActor;
+public: // API
+	UFUNCTION(BlueprintCallable)
+	void SpaceTransformPCToLocal(TArray<FPointCloudPoint> &LoadedPoints);
+
+	UFUNCTION(BlueprintCallable)
+	void SpaceTransformLocalToPC(TArray<FPointCloudPoint> &LoadedPoints);
+
+	UFUNCTION(BlueprintCallable)
+	void SpaceTransformWorldToPC(TArray<FPointCloudPoint> &LoadedPoints);
+
+
+protected: // auxiliary
+	UPointCloud * PrepareRenderingSettings(TArray<FPointCloudPoint> &LoadedPoints);
+	void SpawnPointCloudHostActor(FTransform const &SpawningTransform);
+	void LoadPointsFromFile(TArray<FPointCloudPoint> &LoadedPoints);
 };

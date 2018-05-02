@@ -19,12 +19,22 @@ void USelectionMachineComponent::BeginPlay()
 	Speed = 5.0f;
 	BBMaterialPath = TEXT("/Game/Materials/ParameterizedTranslucent"); // Referencing assets in UE4 code: Game refers to the content folder...
 
+	// get the stuff from which we'll later spawn the bounding box
 	InitializeBoundingBoxTemplate();
 }
 
 void USelectionMachineComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	
+	if (IsDying && Health > 0)
+	{
+		KillALittleMore();
+	}
+	else if (IsDying && Health == 0)
+	{
+		DestroyAndReinitialize();
+	}
 }
 #pragma endregion
 
@@ -36,6 +46,7 @@ void USelectionMachineComponent::SetMode(ETransformEnum transformMode)
 
 void USelectionMachineComponent::StartSelection() 
 {
+	if (BoundingBox != nullptr) return;
 	BoundingBox = SpawnBoundingBox();
 	SetBoundingBoxAttributes();
 }
@@ -60,18 +71,28 @@ void USelectionMachineComponent::TransformZ(int32 way)
 
 void USelectionMachineComponent::FinishSelection() 
 {
-	// decay the BoundingBox
+	if (BoundingBox == nullptr) return;
+
+	// obtain the boundaries
+	FVector Origin;
+	FVector BoundingExtent;
+	BoundingBox->GetActorBounds(false, Origin, BoundingExtent);
+	UE_LOG(LogTemp, Warning, TEXT("%s, %s"), *(Origin.ToString()), *(BoundingExtent.ToString()));
+	
 
 	// save the boundaries into a file in world space.
 	// obtain the inverse transform of the point cloud, so you
 	// may know where the boundaries are in the original space
+
+	// decay the BoundingBox
+	IsDying = true;
 }
 #pragma endregion
 
 #pragma region auxiliary
 AActor* USelectionMachineComponent::SpawnBoundingBox()
 {
-	FVector SpawningLocation = GetOwner()->GetActorLocation() + 50.0f * GetOwner()->GetActorForwardVector();
+	FVector SpawningLocation = GetOwner()->GetActorLocation() + 500.0f * GetOwner()->GetActorForwardVector();
 	FTransform SpawningTransform;
 	SpawningTransform.SetLocation(SpawningLocation);
 
@@ -122,17 +143,16 @@ void USelectionMachineComponent::SetBoundingBoxAttributes()
 		StaticMeshComponent->SetStaticMesh(DesiredStaticMesh);
 
 		// set the target material
-		UMaterialInstanceDynamic* MaterialInstance = GetMaterialInstance();
-		StaticMeshComponent->SetMaterial(0, MaterialInstance);
+		BBMaterial = GetMaterialInstance();
+		StaticMeshComponent->SetMaterial(0, BBMaterial);
 	}
 }
 
 UMaterialInstanceDynamic* USelectionMachineComponent::GetMaterialInstance()
 {
-	UE_LOG(LogTemp, Warning, TEXT("SOME CUBE FOUND LEL"));
 	UMaterial* mat = LoadObject<UMaterial>(UMaterial::StaticClass(), *BBMaterialPath);
 	UMaterialInstanceDynamic* MaterialInstance = UMaterialInstanceDynamic::Create(mat, mat);
-	MaterialInstance->SetScalarParameterValue(TEXT("Opacity"), 0.6f);
+	MaterialInstance->SetScalarParameterValue(TEXT("Opacity"), Health / 100.0f);
 	return MaterialInstance;
 }
 
@@ -151,5 +171,18 @@ void USelectionMachineComponent::CommitTransformation(FVector trans)
 		BoundingBox->SetActorScale3D(BoundingBox->GetActorScale3D() + trans * Speed * 0.01f);
 		break;
 	}
+}
+
+void USelectionMachineComponent::DestroyAndReinitialize()
+{
+	BoundingBox->Destroy();
+	BoundingBox = nullptr;
+	Health = 80.0f;
+	IsDying = false;
+}
+void USelectionMachineComponent::KillALittleMore()
+{
+	Health--;
+	BBMaterial->SetScalarParameterValue("Opacity", Health / 100.0f);
 }
 #pragma endregion

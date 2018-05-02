@@ -41,6 +41,10 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	void DestroyAndReinitialize();
+
+	void KillALittleMore();
+
 
 
 // VARIABLES
@@ -50,9 +54,12 @@ public:
 
 private:
 	float Speed;
+	float Health = 60.0f;
+	bool IsDying = false;
 
 	AActor* BoundingBox;
 	UStaticMeshComponent* BBStaticMeshComponent;
+	UMaterialInstanceDynamic* BBMaterial;
 	FString BBMaterialPath;
 
 	UStaticMesh *DesiredStaticMesh; // bounding box template - it will be spawned using this object
