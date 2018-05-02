@@ -18,6 +18,11 @@ class POINTCLOUDSELECTING_API UPointCloudRenderingComponent : public UActorCompo
 
 private:
 	APointCloudActor * PointCloudHostActor;
+	TArray<FPointCloudPoint> LoadedPoints;
+	UPointCloud* PointCloud;
+	float MaxX;
+	float MinY;
+	float MinZ;
 
 public:	
 	UPointCloudRenderingComponent();
@@ -29,18 +34,16 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 public: // API
-	UFUNCTION(BlueprintCallable)
-	void SpaceTransformPCToLocal(TArray<FPointCloudPoint> &LoadedPoints);
 
 	UFUNCTION(BlueprintCallable)
-	void SpaceTransformLocalToPC(TArray<FPointCloudPoint> &LoadedPoints);
+	void QueryForRegion(FVector& CenterInWorldSpace, FVector& BoundingBox);
 
-	UFUNCTION(BlueprintCallable)
-	void SpaceTransformWorldToPC(TArray<FPointCloudPoint> &LoadedPoints);
-
+	void SavePoints(TArray<FPointCloudPoint> PointsToSave);
 
 protected: // auxiliary
+	void SpaceTransformPCToLocal(TArray<FPointCloudPoint> &LoadedPoints);
 	UPointCloud * PrepareRenderingSettings(TArray<FPointCloudPoint> &LoadedPoints);
 	void SpawnPointCloudHostActor(FTransform const &SpawningTransform);
 	void LoadPointsFromFile(TArray<FPointCloudPoint> &LoadedPoints);
+	void FindExtremes(TArray<FPointCloudPoint> & LoadedPoints);
 };

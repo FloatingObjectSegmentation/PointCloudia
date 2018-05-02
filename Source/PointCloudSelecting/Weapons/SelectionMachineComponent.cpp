@@ -80,16 +80,46 @@ void USelectionMachineComponent::FinishSelection()
 	UE_LOG(LogTemp, Warning, TEXT("%s, %s"), *(Origin.ToString()), *(BoundingExtent.ToString()));
 	
 
-	// save the boundaries into a file in world space.
-	// obtain the inverse transform of the point cloud, so you
-	// may know where the boundaries are in the original space
+	// Query the point cloud
+
+	// WARNING!! Very stupid style of communication between components (dangerous and slow), 
+	// it will suffice until I learn to implement better styles (IE observer pattern).
+	 PointCloudComponent = GetPointCloudRenderingComponent();
+	 if (PointCloudComponent != nullptr)
+		PointCloudComponent->QueryForRegion(Origin, BoundingExtent);
+
 
 	// decay the BoundingBox
 	IsDying = true;
 }
+
 #pragma endregion
 
 #pragma region auxiliary
+UPointCloudRenderingComponent* USelectionMachineComponent::GetPointCloudRenderingComponent()
+{
+	// WARNING!! Very stupid style of communication between components (dangerous and slow), 
+	// it will suffice until I learn to implement better styles (IE observer pattern).
+	UPointCloudRenderingComponent* result = nullptr;
+
+	TSubclassOf<AActor> ClassToFind = AStaticMeshActor::StaticClass();
+	TArray<AActor*> FoundActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ClassToFind, FoundActors);
+	for (int32 i = 0; i < FoundActors.Num(); i++) {
+		FString str = FoundActors[i]->GetActorLabel();
+		if (str.Contains(TEXT("PointCloudAnchor"))) { // Dangerous -> relies on the name of the anchor never changing
+			TArray<UPointCloudRenderingComponent*> Components;
+			FoundActors[i]->GetComponents<UPointCloudRenderingComponent>(Components);
+			if (Components.Num() > 0) {
+				result = Components[0];
+				break;
+			}
+			break;
+		}
+	}
+	return result;
+}
+
 AActor* USelectionMachineComponent::SpawnBoundingBox()
 {
 	FVector SpawningLocation = GetOwner()->GetActorLocation() + 500.0f * GetOwner()->GetActorForwardVector();
@@ -130,6 +160,7 @@ void USelectionMachineComponent::ExtractStaticMeshFromActor(TArray<AActor *> & F
 	FoundActors[i]->GetComponents<UStaticMeshComponent>(Components);
 	if (Components.Num() > 0) {
 		DesiredStaticMesh = Components[0]->GetStaticMesh();
+		//UE_LOG(LogTemp, Warning, TEXT("MESH EXTRACTED!"));
 	}
 }
 

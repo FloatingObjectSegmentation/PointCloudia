@@ -13,6 +13,7 @@
 #include "GameFramework/Actor.h"
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
 #include "Runtime/Engine/Classes/Materials/MaterialInstanceDynamic.h"
+#include "../PointCloudRenderingComponent.h"
 #include "SelectionMachineComponent.generated.h"
 
 UENUM(BlueprintType)		//"BlueprintType" is essential to include
@@ -61,6 +62,7 @@ private:
 	UStaticMeshComponent* BBStaticMeshComponent;
 	UMaterialInstanceDynamic* BBMaterial;
 	FString BBMaterialPath;
+	UPointCloudRenderingComponent* PointCloudComponent;
 
 	UStaticMesh *DesiredStaticMesh; // bounding box template - it will be spawned using this object
 
@@ -92,4 +94,5 @@ private:
 	void InitializeBoundingBoxTemplate();
 	void FindTemplateMesh(TArray<AActor *> &FoundActors);
 	void ExtractStaticMeshFromActor(TArray<AActor *> & FoundActors, const int32 &i);
+	UPointCloudRenderingComponent* GetPointCloudRenderingComponent();
 };

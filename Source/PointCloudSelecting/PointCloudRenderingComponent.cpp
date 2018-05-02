@@ -6,12 +6,7 @@
 // Sets default values for this component's properties
 UPointCloudRenderingComponent::UPointCloudRenderingComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-
 	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
 }
 
 
@@ -20,10 +15,10 @@ void UPointCloudRenderingComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	TArray<FPointCloudPoint> LoadedPoints;
 	LoadPointsFromFile(LoadedPoints);
+	FindExtremes(LoadedPoints); // Needed to be able to compute transformations between PC, Local and World space
 	SpaceTransformPCToLocal(LoadedPoints);
-	UPointCloud* PointCloud = PrepareRenderingSettings(LoadedPoints); // use a predefined configuration (for now)
+	PointCloud = PrepareRenderingSettings(LoadedPoints); // use a predefined configuration (for now)
 	SpawnPointCloudHostActor(FTransform(FVector(0.0f)));
 	PointCloudHostActor->SetPointCloud(PointCloud);
 
@@ -37,38 +32,55 @@ void UPointCloudRenderingComponent::TickComponent(float DeltaTime, ELevelTick Ti
 #pragma endregion
 
 #pragma region API
+// WARNING! These functions are unsafe and you have to be careful handling them.
+// Need to remember which space you are in!
 
-void UPointCloudRenderingComponent::SpaceTransformPCToLocal(TArray<FPointCloudPoint> &LoadedPoints) {
+void UPointCloudRenderingComponent::QueryForRegion(FVector& CenterInWorldSpace, FVector& BoundingBox) 
+{
+	TArray<FPointCloudPoint> QueryResult;
 
-	// It appears that it needs to be reflected through the X axis to be correctly visualized.
-	// Something may be wrong in the transformation, but as long as we are getting the correct
-	// object out, it will suffice for this application.
-
-	int MaxX = INT32_MIN, MinY = INT32_MAX, MinZ = INT32_MAX;
 	for (int32 i = 0; i < LoadedPoints.Num(); i++) {
-		if (LoadedPoints[i].Location.X > MaxX) MaxX = LoadedPoints[i].Location.X; // reflect through X axis
-		if (LoadedPoints[i].Location.Y < MinY) MinY = LoadedPoints[i].Location.Y;
-		if (LoadedPoints[i].Location.Z < MinZ) MinZ = LoadedPoints[i].Location.Z;
+		
+		if (CenterInWorldSpace.X + BoundingBox.X / 2.0f > LoadedPoints[i].Location.X &&
+			CenterInWorldSpace.X - BoundingBox.X / 2.0f < LoadedPoints[i].Location.X &&
+			CenterInWorldSpace.Y + BoundingBox.Y / 2.0f > LoadedPoints[i].Location.Y &&
+			CenterInWorldSpace.Y - BoundingBox.Y / 2.0f < LoadedPoints[i].Location.Y &&
+			CenterInWorldSpace.Z + BoundingBox.Z / 2.0f > LoadedPoints[i].Location.Z &&
+			CenterInWorldSpace.Z - BoundingBox.Z / 2.0f < LoadedPoints[i].Location.Z) 
+		{
+			UE_LOG(LogTemp, Warning, TEXT("YAAAAY!!!!"));
+			LoadedPoints[i].Color.R = 255;
+			LoadedPoints[i].Color.G = 0;
+			LoadedPoints[i].Color.B = 0;
+			LoadedPoints[i].Color.A = 150;
+		}
 	}
+
+	// copy points
 	for (int32 i = 0; i < LoadedPoints.Num(); i++) {
-		LoadedPoints[i].Location.X = MaxX - LoadedPoints[i].Location.X;
-		LoadedPoints[i].Location.Y -= MinY;
-		LoadedPoints[i].Location.Z -= MinZ;
+		QueryResult.Emplace(LoadedPoints[i].Location.X, LoadedPoints[i].Location.Y, LoadedPoints[i].Location.Z,
+			(float&)LoadedPoints[i].Color.R, (float&)LoadedPoints[i].Color.G, (float&)LoadedPoints[i].Color.B);
 	}
-	
-}
 
-void UPointCloudRenderingComponent::SpaceTransformLocalToPC(TArray<FPointCloudPoint> &LoadedPoints) {
-	// TODO
+	UPointCloud* tmpPointCloud = PrepareRenderingSettings(QueryResult);
+	PointCloudHostActor->SetPointCloud(PointCloud);
+	//PointCloud = tmpPointCloud;
 }
+void UPointCloudRenderingComponent::SavePoints(TArray<FPointCloudPoint> PointsToSave)
+{
+	// transform points to PC space
+	for (int32 i = 0; i < PointsToSave.Num(); i++) {
+		PointsToSave[i].Location.X = MaxX - PointsToSave[i].Location.X;
+		PointsToSave[i].Location.Y += MinY;
+		PointsToSave[i].Location.Z += MinZ;
+	}
 
-void UPointCloudRenderingComponent::SpaceTransformWorldToPC(TArray<FPointCloudPoint> &LoadedPoints) {
-	// TODO
+	// save the points to disk
 }
 #pragma endregion
 
 #pragma region auxiliary
-UPointCloud* UPointCloudRenderingComponent::PrepareRenderingSettings(TArray<FPointCloudPoint> &LoadedPoints)
+UPointCloud* UPointCloudRenderingComponent::PrepareRenderingSettings(TArray<FPointCloudPoint> &Points)
 {
 	UPointCloud* PointCloud = NewObject<UPointCloud>(this->StaticClass(), TEXT("PointCloud"));
 	UPointCloudSettings* PointCloudSettings = NewObject<UPointCloudSettings>(this->StaticClass(), TEXT("PointCloudSettings"));
@@ -79,7 +91,7 @@ UPointCloud* UPointCloudRenderingComponent::PrepareRenderingSettings(TArray<FPoi
 	PointCloudSettings->Saturation = 4.5f;
 	PointCloudSettings->SectionSize = FVector(100.f);
 	PointCloud->SetSettings(PointCloudSettings);
-	PointCloud->SetPointCloudData(LoadedPoints, true);
+	PointCloud->SetPointCloudData(Points, true);
 	return PointCloud;
 }
 
@@ -105,5 +117,30 @@ void UPointCloudRenderingComponent::LoadPointsFromFile(TArray<FPointCloudPoint> 
 	Header.SelectedColumns = SelectedColumns;
 
 	FPointCloudHelper::ImportAsText(TEXT("C:\\Users\\km\\Desktop\\graphics\\data\\simon.txt"), LoadedPoints, Mode, 0, 500000000, Header); 
+}
+
+void UPointCloudRenderingComponent::FindExtremes(TArray<FPointCloudPoint> & LoadedPoints)
+{
+	MaxX = INT32_MIN;
+	MinY = INT32_MAX;
+	MinZ = INT32_MAX;
+	for (int32 i = 0; i < LoadedPoints.Num(); i++) {
+		if (LoadedPoints[i].Location.X > MaxX) MaxX = LoadedPoints[i].Location.X; // reflect through X axis
+		if (LoadedPoints[i].Location.Y < MinY) MinY = LoadedPoints[i].Location.Y;
+		if (LoadedPoints[i].Location.Z < MinZ) MinZ = LoadedPoints[i].Location.Z;
+	}
+}
+
+void UPointCloudRenderingComponent::SpaceTransformPCToLocal(TArray<FPointCloudPoint> &LoadedPoints) {
+
+	// It appears that it needs to be reflected through the X axis to be correctly visualized.
+	// Something may be wrong in the transformation, but as long as we are getting the correct
+	// object out, it will suffice for this application.
+	for (int32 i = 0; i < LoadedPoints.Num(); i++) {
+		LoadedPoints[i].Location.X = MaxX - LoadedPoints[i].Location.X;
+		LoadedPoints[i].Location.Y -= MinY;
+		LoadedPoints[i].Location.Z -= MinZ;
+	}
+
 }
 #pragma endregion
