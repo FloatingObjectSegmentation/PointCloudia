@@ -73,5 +73,5 @@ public:
 
 private:
 	AActor * SpawnBoundingBox();
-	void CommitTransformation(FVector& trans);
+	void CommitTransformation(FVector trans);
 };

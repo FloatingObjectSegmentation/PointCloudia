@@ -6,15 +6,10 @@
 // Sets default values for this component's properties
 USelectionMachineComponent::USelectionMachineComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
 }
 
 #pragma region unreal events
-// Called when the game starts
 void USelectionMachineComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -24,7 +19,6 @@ void USelectionMachineComponent::BeginPlay()
 	Speed = 5.0f;
 
 	InitializeBoundingBoxAttributes();
-	
 }
 
 void USelectionMachineComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -34,14 +28,14 @@ void USelectionMachineComponent::TickComponent(float DeltaTime, ELevelTick TickT
 #pragma endregion
 
 #pragma region Blueprint API
-void USelectionMachineComponent::SetMode(ETransformEnum transformMode) {
+void USelectionMachineComponent::SetMode(ETransformEnum transformMode) 
+{
 	TransformMode = transformMode;
 }
 
-void USelectionMachineComponent::StartSelection() {
-
+void USelectionMachineComponent::StartSelection() 
+{
 	BoundingBox = SpawnBoundingBox();
-
 	SetBoundingBoxAttributes();
 }
 
@@ -56,22 +50,26 @@ AActor* USelectionMachineComponent::SpawnBoundingBox()
 	return spawned;
 }
 
-void USelectionMachineComponent::TransformX(int32 way) {
+void USelectionMachineComponent::TransformX(int32 way) 
+{
 	if (BoundingBox == nullptr) return;
 	CommitTransformation(FVector(way, 0 ,0));
 }
 
-void USelectionMachineComponent::TransformY(int32 way) {
+void USelectionMachineComponent::TransformY(int32 way) 
+{
 	if (BoundingBox == nullptr) return;
 	CommitTransformation(FVector(0, way, 0));
 }
 
-void USelectionMachineComponent::TransformZ(int32 way) {
+void USelectionMachineComponent::TransformZ(int32 way) 
+{
 	if (BoundingBox == nullptr) return;
 	CommitTransformation(FVector(0, 0, way));
 }
 
-void USelectionMachineComponent::FinishSelection() {
+void USelectionMachineComponent::FinishSelection() 
+{
 	// decay the BoundingBox
 
 	// save the boundaries into a file in world space.
@@ -122,7 +120,7 @@ void USelectionMachineComponent::SetBoundingBoxAttributes()
 	}
 }
 
-void USelectionMachineComponent::CommitTransformation(FVector &trans)
+void USelectionMachineComponent::CommitTransformation(FVector trans)
 {
 	switch (TransformMode) {
 	case ETransformEnum::Translation:
