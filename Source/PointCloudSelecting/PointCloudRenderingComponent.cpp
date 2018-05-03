@@ -32,8 +32,6 @@ void UPointCloudRenderingComponent::TickComponent(float DeltaTime, ELevelTick Ti
 #pragma endregion
 
 #pragma region API
-// WARNING! These functions are unsafe and you have to be careful handling them.
-// Need to remember which space you are in!
 
 void UPointCloudRenderingComponent::QueryForRegion(FVector& CenterInWorldSpace, FVector& BoundingBox) 
 {
