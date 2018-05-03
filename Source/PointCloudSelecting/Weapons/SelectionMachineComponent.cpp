@@ -122,13 +122,23 @@ UPointCloudRenderingComponent* USelectionMachineComponent::GetPointCloudRenderin
 
 AActor* USelectionMachineComponent::SpawnBoundingBox()
 {
-	FVector SpawningLocation = GetOwner()->GetActorLocation() + 500.0f * GetOwner()->GetActorForwardVector();
 	FTransform SpawningTransform;
-	SpawningTransform.SetLocation(SpawningLocation);
+	GetBoundingBoxSpawnTransform(OUT SpawningTransform);
 
 	UClass* param = AStaticMeshActor::StaticClass();
 	AActor* spawned = GetWorld()->SpawnActor(param, &SpawningTransform, FActorSpawnParameters());
 	return spawned;
+}
+
+void USelectionMachineComponent::GetBoundingBoxSpawnTransform(FTransform &SpawningTransform)
+{
+	FVector SpawningLocation;
+	FVector PlayerViewPointLocation;
+	FRotator Rotation;
+	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(OUT PlayerViewPointLocation, OUT Rotation); // OUT does nothing, but it allows us to mark out params!
+	FVector RotAsVector = Rotation.Vector();
+	SpawningLocation = GetOwner()->GetActorLocation() + 500.0f * RotAsVector;
+	SpawningTransform.SetLocation(SpawningLocation);
 }
 
 void USelectionMachineComponent::InitializeBoundingBoxTemplate()

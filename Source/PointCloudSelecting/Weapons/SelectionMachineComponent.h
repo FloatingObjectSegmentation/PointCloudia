@@ -90,6 +90,7 @@ private:
 	void SetBoundingBoxAttributes();
 	UMaterialInstanceDynamic* GetMaterialInstance();
 	AActor * SpawnBoundingBox();
+	void GetBoundingBoxSpawnTransform(FTransform &SpawningTransform);
 	void CommitTransformation(FVector trans);
 	void InitializeBoundingBoxTemplate();
 	void FindTemplateMesh(TArray<AActor *> &FoundActors);
