@@ -39,12 +39,12 @@ void UPointCloudRenderingComponent::QueryForRegion(FVector& CenterInWorldSpace, 
 
 	for (int32 i = 0; i < LoadedPoints.Num(); i++) {
 		
-		if (CenterInWorldSpace.X + BoundingBox.X / 2.0f > LoadedPoints[i].Location.X &&
-			CenterInWorldSpace.X - BoundingBox.X / 2.0f < LoadedPoints[i].Location.X &&
-			CenterInWorldSpace.Y + BoundingBox.Y / 2.0f > LoadedPoints[i].Location.Y &&
-			CenterInWorldSpace.Y - BoundingBox.Y / 2.0f < LoadedPoints[i].Location.Y &&
-			CenterInWorldSpace.Z + BoundingBox.Z / 2.0f > LoadedPoints[i].Location.Z &&
-			CenterInWorldSpace.Z - BoundingBox.Z / 2.0f < LoadedPoints[i].Location.Z) 
+		if (CenterInWorldSpace.X + BoundingBox.X > LoadedPoints[i].Location.X &&
+			CenterInWorldSpace.X - BoundingBox.X < LoadedPoints[i].Location.X &&
+			CenterInWorldSpace.Y + BoundingBox.Y > LoadedPoints[i].Location.Y &&
+			CenterInWorldSpace.Y - BoundingBox.Y < LoadedPoints[i].Location.Y &&
+			CenterInWorldSpace.Z + BoundingBox.Z > LoadedPoints[i].Location.Z &&
+			CenterInWorldSpace.Z - BoundingBox.Z < LoadedPoints[i].Location.Z) 
 		{
 			UE_LOG(LogTemp, Warning, TEXT("YAAAAY!!!!"));
 			LoadedPoints[i].Color.R = 255;
