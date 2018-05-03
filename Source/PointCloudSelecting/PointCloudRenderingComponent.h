@@ -42,7 +42,7 @@ public: // API
 
 protected: // auxiliary
 	void SpaceTransformPCToLocal(TArray<FPointCloudPoint> &LoadedPoints);
-	UPointCloud * PrepareRenderingSettings(TArray<FPointCloudPoint> &LoadedPoints);
+	UPointCloud * PrepareRenderingSettings(TArray<FPointCloudPoint> &Points, FString pointCloudName, FString settingsName);
 	void SpawnPointCloudHostActor(FTransform const &SpawningTransform);
 	void LoadPointsFromFile(TArray<FPointCloudPoint> &LoadedPoints);
 	void FindExtremes(TArray<FPointCloudPoint> & LoadedPoints);

@@ -18,7 +18,7 @@ void UPointCloudRenderingComponent::BeginPlay()
 	LoadPointsFromFile(LoadedPoints);
 	FindExtremes(LoadedPoints); // Needed to be able to compute transformations between PC, Local and World space
 	SpaceTransformPCToLocal(LoadedPoints);
-	PointCloud = PrepareRenderingSettings(LoadedPoints); // use a predefined configuration (for now)
+	PointCloud = PrepareRenderingSettings(LoadedPoints, TEXT("PointCloud1"), TEXT("Settings1")); // use a predefined configuration (for now)
 	SpawnPointCloudHostActor(FTransform(FVector(0.0f)));
 	PointCloudHostActor->SetPointCloud(PointCloud);
 
@@ -52,18 +52,24 @@ void UPointCloudRenderingComponent::QueryForRegion(FVector& CenterInWorldSpace, 
 			LoadedPoints[i].Color.R = 255;
 			LoadedPoints[i].Color.G = 0;
 			LoadedPoints[i].Color.B = 0;
-			LoadedPoints[i].Color.A = 150;
 		}
 	}
 
 	// copy points
 	for (int32 i = 0; i < LoadedPoints.Num(); i++) {
+		float Rnorm = LoadedPoints[i].Color.R / 256.0f;
+		float Gnorm = LoadedPoints[i].Color.G / 256.0f;
+		float Bnorm = LoadedPoints[i].Color.B / 256.0f;
 		QueryResult.Emplace(LoadedPoints[i].Location.X, LoadedPoints[i].Location.Y, LoadedPoints[i].Location.Z,
-			(float&)LoadedPoints[i].Color.R, (float&)LoadedPoints[i].Color.G, (float&)LoadedPoints[i].Color.B);
+			Rnorm, Gnorm, Bnorm);
 	}
 
-	UPointCloud* tmpPointCloud = PrepareRenderingSettings(QueryResult);
-	PointCloudHostActor->SetPointCloud(PointCloud);
+	PointCloudHostActor->Destroy();
+	PointCloudHostActor = nullptr;
+	UPointCloud* tmpPointCloud = PrepareRenderingSettings(QueryResult, "PointCloud2", "Settings2");
+	SpawnPointCloudHostActor(FTransform(FVector(0.0f)));
+	PointCloudHostActor->SetPointCloud(tmpPointCloud);
+
 	//PointCloud = tmpPointCloud;
 }
 void UPointCloudRenderingComponent::SavePoints(TArray<FPointCloudPoint> PointsToSave)
@@ -80,10 +86,10 @@ void UPointCloudRenderingComponent::SavePoints(TArray<FPointCloudPoint> PointsTo
 #pragma endregion
 
 #pragma region auxiliary
-UPointCloud* UPointCloudRenderingComponent::PrepareRenderingSettings(TArray<FPointCloudPoint> &Points)
+UPointCloud* UPointCloudRenderingComponent::PrepareRenderingSettings(TArray<FPointCloudPoint> &Points, FString pointCloudName, FString settingsName)
 {
-	UPointCloud* PointCloud = NewObject<UPointCloud>(this->StaticClass(), TEXT("PointCloud"));
-	UPointCloudSettings* PointCloudSettings = NewObject<UPointCloudSettings>(this->StaticClass(), TEXT("PointCloudSettings"));
+	UPointCloud* PointCloud = NewObject<UPointCloud>(this->StaticClass(), *pointCloudName);
+	UPointCloudSettings* PointCloudSettings = NewObject<UPointCloudSettings>(this->StaticClass(), *settingsName);
 	PointCloudSettings->RenderMethod = EPointCloudRenderMethod::Sprite_Unlit_RGB;
 	PointCloudSettings->SpriteSize = FVector2D(0.4f, 0.4f);
 	PointCloudSettings->Scale = FVector(1.0f);
