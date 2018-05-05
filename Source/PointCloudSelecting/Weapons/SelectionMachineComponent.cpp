@@ -16,7 +16,6 @@ void USelectionMachineComponent::BeginPlay()
 
 	BoundingBox = nullptr;
 	TransformMode = ETransformEnum::Translation;
-	Speed = 5.0f;
 	BBMaterialPath = TEXT("/Game/Materials/ParameterizedTranslucent"); // Referencing assets in UE4 code: Game refers to the content folder...
 
 	// get the stuff from which we'll later spawn the bounding box
@@ -85,8 +84,10 @@ void USelectionMachineComponent::FinishSelection()
 	// WARNING!! Very stupid style of communication between components (dangerous and slow), 
 	// it will suffice until I learn to implement better styles (IE observer pattern).
 	 PointCloudComponent = GetPointCloudRenderingComponent();
+	 UE_LOG(LogTemp, Warning, TEXT("I'm here"));
 	 if (PointCloudComponent != nullptr)
-		PointCloudComponent->QueryForRegion(Origin, BoundingExtent);
+		UE_LOG(LogTemp, Warning, TEXT("PointCloudComponent was not nullptr"));
+		PointCloudComponent->ProcessSelectedPoints(Origin, BoundingExtent);
 
 
 	// decay the BoundingBox
@@ -137,7 +138,7 @@ void USelectionMachineComponent::GetBoundingBoxSpawnTransform(FTransform &Spawni
 	FRotator Rotation;
 	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(OUT PlayerViewPointLocation, OUT Rotation); // OUT does nothing, but it allows us to mark out params!
 	FVector RotAsVector = Rotation.Vector();
-	SpawningLocation = GetOwner()->GetActorLocation() + 500.0f * RotAsVector;
+	SpawningLocation = GetOwner()->GetActorLocation() + SpawnDistance * RotAsVector;
 	SpawningTransform.SetLocation(SpawningLocation);
 }
 

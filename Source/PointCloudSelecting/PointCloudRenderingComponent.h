@@ -2,9 +2,19 @@
 
 #pragma once
 
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <sstream>
+#include "Rpc.h"
+
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "PointCloud.h"
+#include "Runtime/Core/Public/Misc/FileHelper.h"
+#include "Runtime/Core/Public/Misc/Guid.h"
+#include "Runtime/Core/Public/Containers/UnrealString.h"
+#include "Runtime/Core/Public/Misc/StringFormatArg.h"
 #include "PointCloudHelper.h"
 #include "PointCloudActor.h"
 #include "Engine/World.h"
@@ -23,6 +33,7 @@ private:
 	float MaxX;
 	float MinY;
 	float MinZ;
+	FString SavingFolder;
 
 public:	
 	UPointCloudRenderingComponent();
@@ -36,9 +47,7 @@ public:
 public: // API
 
 	UFUNCTION(BlueprintCallable)
-	void QueryForRegion(FVector& CenterInWorldSpace, FVector& BoundingBox);
-
-	void SavePoints(TArray<FPointCloudPoint> PointsToSave);
+	void ProcessSelectedPoints(FVector& CenterInWorldSpace, FVector& BoundingBox);
 
 protected: // auxiliary
 	void SpaceTransformPCToLocal(TArray<FPointCloudPoint> &LoadedPoints);
@@ -46,4 +55,9 @@ protected: // auxiliary
 	void SpawnPointCloudHostActor(FTransform const &SpawningTransform);
 	void LoadPointsFromFile(TArray<FPointCloudPoint> &LoadedPoints);
 	void FindExtremes(TArray<FPointCloudPoint> & LoadedPoints);
+	void MarkSubsetWithinLoadedPoints(TArray<int32> &QueryResultIndices);
+	TArray<FPointCloudPoint> GetPointSubset(TArray<int32> &QueryResultIndices);
+	void FindSelectionIndices(FVector & CenterInWorldSpace, FVector & BoundingBox, TArray<int32> &QueryResultIndices);
+	void RerenderPointCloud();
+	void SavePoints(TArray<FPointCloudPoint> PointsToSave);
 };

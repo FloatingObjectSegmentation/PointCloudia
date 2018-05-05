@@ -14,6 +14,7 @@ UPointCloudRenderingComponent::UPointCloudRenderingComponent()
 void UPointCloudRenderingComponent::BeginPlay()
 {
 	Super::BeginPlay();
+	SavingFolder = FString("C:/Users/km/Desktop/playground/unreal/unreal_workspaces/PointCloudia");
 
 	LoadPointsFromFile(LoadedPoints);
 	FindExtremes(LoadedPoints); // Needed to be able to compute transformations between PC, Local and World space
@@ -32,54 +33,15 @@ void UPointCloudRenderingComponent::TickComponent(float DeltaTime, ELevelTick Ti
 #pragma endregion
 
 #pragma region API
-
-void UPointCloudRenderingComponent::QueryForRegion(FVector& CenterInWorldSpace, FVector& BoundingBox) 
+void UPointCloudRenderingComponent::ProcessSelectedPoints(FVector& CenterInWorldSpace, FVector& BoundingBox)
 {
-	TArray<FPointCloudPoint> QueryResult;
-
-	for (int32 i = 0; i < LoadedPoints.Num(); i++) {
-		
-		if (CenterInWorldSpace.X + BoundingBox.X > LoadedPoints[i].Location.X &&
-			CenterInWorldSpace.X - BoundingBox.X < LoadedPoints[i].Location.X &&
-			CenterInWorldSpace.Y + BoundingBox.Y > LoadedPoints[i].Location.Y &&
-			CenterInWorldSpace.Y - BoundingBox.Y < LoadedPoints[i].Location.Y &&
-			CenterInWorldSpace.Z + BoundingBox.Z > LoadedPoints[i].Location.Z &&
-			CenterInWorldSpace.Z - BoundingBox.Z < LoadedPoints[i].Location.Z) 
-		{
-			UE_LOG(LogTemp, Warning, TEXT("YAAAAY!!!!"));
-			LoadedPoints[i].Color.R = 255;
-			LoadedPoints[i].Color.G = 0;
-			LoadedPoints[i].Color.B = 0;
-		}
-	}
-
-	// copy points
-	for (int32 i = 0; i < LoadedPoints.Num(); i++) {
-		float Rnorm = LoadedPoints[i].Color.R / 256.0f;
-		float Gnorm = LoadedPoints[i].Color.G / 256.0f;
-		float Bnorm = LoadedPoints[i].Color.B / 256.0f;
-		QueryResult.Emplace(LoadedPoints[i].Location.X, LoadedPoints[i].Location.Y, LoadedPoints[i].Location.Z,
-			Rnorm, Gnorm, Bnorm);
-	}
-
-	PointCloudHostActor->Destroy();
-	PointCloudHostActor = nullptr;
-	UPointCloud* tmpPointCloud = PrepareRenderingSettings(QueryResult, "PointCloud2", "Settings2");
-	SpawnPointCloudHostActor(FTransform(FVector(0.0f)));
-	PointCloudHostActor->SetPointCloud(tmpPointCloud);
-
-	//PointCloud = tmpPointCloud;
-}
-void UPointCloudRenderingComponent::SavePoints(TArray<FPointCloudPoint> PointsToSave)
-{
-	// transform points to PC space
-	for (int32 i = 0; i < PointsToSave.Num(); i++) {
-		PointsToSave[i].Location.X = MaxX - PointsToSave[i].Location.X;
-		PointsToSave[i].Location.Y += MinY;
-		PointsToSave[i].Location.Z += MinZ;
-	}
-
-	// save the points to disk
+	UE_LOG(LogTemp, Warning, TEXT("Inside ProcessSelectedPoints"));
+	TArray<int32> QueryResultIndices;
+	FindSelectionIndices(CenterInWorldSpace, BoundingBox, QueryResultIndices);
+	TArray<FPointCloudPoint> SelectedPoints = GetPointSubset(QueryResultIndices);
+	SavePoints(SelectedPoints);
+	MarkSubsetWithinLoadedPoints(QueryResultIndices);
+	RerenderPointCloud();
 }
 #pragma endregion
 
@@ -146,5 +108,98 @@ void UPointCloudRenderingComponent::SpaceTransformPCToLocal(TArray<FPointCloudPo
 		LoadedPoints[i].Location.Z -= MinZ;
 	}
 
+}
+
+void UPointCloudRenderingComponent::MarkSubsetWithinLoadedPoints(TArray<int32> &QueryResultIndices)
+{
+	for (auto& i : QueryResultIndices) {
+		LoadedPoints[i].Color.R = 255;
+		LoadedPoints[i].Color.G = 0;
+		LoadedPoints[i].Color.B = 0;
+	}
+}
+TArray<FPointCloudPoint> UPointCloudRenderingComponent::GetPointSubset(TArray<int32> &QueryResultIndices)
+{
+	TArray<FPointCloudPoint> QueryResult;
+	for (auto& i : QueryResultIndices) {
+		// normalizing colors is not a side effect of this function. It just needs to be done so because
+		// the point cloud plugin is made so.
+		float normR = LoadedPoints[i].Color.R / 256.0f;
+		float normG = LoadedPoints[i].Color.G / 256.0f;
+		float normB = LoadedPoints[i].Color.B / 256.0f;
+		QueryResult.Emplace(LoadedPoints[i].Location.X, LoadedPoints[i].Location.Y, LoadedPoints[i].Location.Z,
+			normR, normG, normB);
+	}
+	return QueryResult;
+}
+void UPointCloudRenderingComponent::FindSelectionIndices(FVector & CenterInWorldSpace, FVector & BoundingBox, TArray<int32> &QueryResultIndices)
+{
+	for (int32 i = 0; i < LoadedPoints.Num(); i++) {
+
+		if (CenterInWorldSpace.X + BoundingBox.X > LoadedPoints[i].Location.X &&
+			CenterInWorldSpace.X - BoundingBox.X < LoadedPoints[i].Location.X &&
+			CenterInWorldSpace.Y + BoundingBox.Y > LoadedPoints[i].Location.Y &&
+			CenterInWorldSpace.Y - BoundingBox.Y < LoadedPoints[i].Location.Y &&
+			CenterInWorldSpace.Z + BoundingBox.Z > LoadedPoints[i].Location.Z &&
+			CenterInWorldSpace.Z - BoundingBox.Z < LoadedPoints[i].Location.Z)
+		{
+			QueryResultIndices.Add(i);
+		}
+	}
+}
+void UPointCloudRenderingComponent::RerenderPointCloud()
+{
+	TArray<FPointCloudPoint> NewPointCloud;
+	for (int32 i = 0; i < LoadedPoints.Num(); i++) {
+		float Rnorm = LoadedPoints[i].Color.R / 256.0f;
+		float Gnorm = LoadedPoints[i].Color.G / 256.0f;
+		float Bnorm = LoadedPoints[i].Color.B / 256.0f;
+		NewPointCloud.Emplace(LoadedPoints[i].Location.X, LoadedPoints[i].Location.Y, LoadedPoints[i].Location.Z,
+			Rnorm, Gnorm, Bnorm);
+	}
+
+	PointCloudHostActor->Destroy();
+	PointCloudHostActor = nullptr;
+	UPointCloud* tmpPointCloud = PrepareRenderingSettings(NewPointCloud, "PointCloud2", "Settings2");
+	SpawnPointCloudHostActor(FTransform(FVector(0.0f)));
+	PointCloudHostActor->SetPointCloud(tmpPointCloud);
+}
+void UPointCloudRenderingComponent::SavePoints(TArray<FPointCloudPoint> PointsToSave)
+{
+	// transform points to PC space
+	for (int32 i = 0; i < PointsToSave.Num(); i++) {
+
+		// locations
+		PointsToSave[i].Location.X = MaxX - PointsToSave[i].Location.X;
+		PointsToSave[i].Location.Y += MinY;
+		PointsToSave[i].Location.Z += MinZ;
+
+		// colors
+		PointsToSave[i].Color.R = PointsToSave[i].Color.R * 255 * 255;
+		PointsToSave[i].Color.G = PointsToSave[i].Color.G * 255 * 255;
+		PointsToSave[i].Color.B = PointsToSave[i].Color.B * 255 * 255;
+	}
+
+	// save the points to disk
+	FString total;
+	for (auto& val : PointsToSave) 
+	{
+		FString line = FString::Printf(TEXT("%.2f %.2f %.2f %d %d %d"), val.Location.X, val.Location.Y, val.Location.Z, (int32)val.Color.R, (int32)val.Color.G, (int32)val.Color.B);
+		total.Append(line);
+		total.Append("\n");
+	}
+	
+	FGuid guid = FGuid::NewGuid();
+	FString filename = SavingFolder;
+	filename.Append("/");
+	filename.Append(guid.ToString() + TEXT(".txt"));
+
+	
+
+
+	bool isSuccessful = FFileHelper::SaveStringToFile(filename, TEXT("SOMETHING"), FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get());
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *filename);
+	if (isSuccessful)
+		UE_LOG(LogTemp, Warning, TEXT("successful"));
 }
 #pragma endregion

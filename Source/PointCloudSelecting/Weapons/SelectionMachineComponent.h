@@ -54,7 +54,8 @@ public:
 	ETransformEnum TransformMode;
 
 private:
-	float Speed;
+	float Speed = 1.0f;
+	float SpawnDistance = 200.0f;
 	float Health = 60.0f;
 	bool IsDying = false;
 
