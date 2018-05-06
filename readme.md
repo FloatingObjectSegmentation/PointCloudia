@@ -13,6 +13,7 @@ For now, the program is primarily meant to be used with LiDAR point clouds.
     - [UE4.19 Rama's VictoryPlugin](https://forums.unrealengine.com/development-discussion/blueprint-visual-scripting/4014-39-rama-s-extra-blueprint-nodes-for-you-as-a-plugin-no-c-required?3851-(39)-Rama-s-Extra-Blueprint-Nodes-for-You-as-a-Plugin-No-C-Required!=)
 - las2txt
     - Install LASTools directly from their github repository. Use the las2txt tools they have.
+- [lidar-orto-photo project by Slemenik](https://github.com/slemenik/lidar-orto-photo)
 
 ### Install
 
@@ -22,6 +23,8 @@ For now, the program is primarily meant to be used with LiDAR point clouds.
 ### Prepare
 
 1. Prepare your LAS point cloud
+    - Do this step only if you are using ARSO data
+        - Use ```lidar-orto-photo``` to enrich your ARSO point cloud with RGB data.
     - Use ```las2txt``` to transform your .LAS or .LAZ point cloud into the correct format.
         - ```las2txt -i yourpointcloud.laz -o cloud.txt -parse xyzRGB```
         - ```las2txt -i yourpointcloud.laz -o cloudclass.txt -parse xyrRGc```
