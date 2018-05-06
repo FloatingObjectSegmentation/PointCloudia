@@ -34,6 +34,10 @@ private:
 	float MinY;
 	float MinZ;
 
+	FString PointCloudFile = TEXT("C:\\Users\\km\\Desktop\\playground\\unreal\\unreal_workspaces\\PointCloudia\\simon.txt");
+	FString PointCloudClassFile = TEXT("C:\\Users\\km\\Desktop\\playground\\unreal\\unreal_workspaces\\PointCloudia\\simonclass.txt");
+	
+
 public:	
 	UPointCloudRenderingComponent();
 
@@ -52,7 +56,8 @@ protected: // auxiliary
 	void SpaceTransformPCToLocal(TArray<FPointCloudPoint> &LoadedPoints);
 	UPointCloud * PrepareRenderingSettings(TArray<FPointCloudPoint> &Points, FString pointCloudName, FString settingsName);
 	void SpawnPointCloudHostActor(FTransform const &SpawningTransform);
-	void LoadPointsFromFile(TArray<FPointCloudPoint> &LoadedPoints);
+	void GetPointCloudPoints(TArray<FPointCloudPoint> &LoadedPoints);
+	TArray<FPointCloudPoint> LoadPointCloudFromFileTXT(FString filename, FVector2D RgbRange = FVector2D(0.0f, 256.0f * 256.0f - 1.0f));
 	void FindExtremes(TArray<FPointCloudPoint> & LoadedPoints);
 	void MarkSubsetWithinLoadedPoints(TArray<int32> &QueryResultIndices);
 	TArray<FPointCloudPoint> GetPointSubset(TArray<int32> &QueryResultIndices);

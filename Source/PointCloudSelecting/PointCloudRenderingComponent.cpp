@@ -15,7 +15,7 @@ void UPointCloudRenderingComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	LoadPointsFromFile(LoadedPoints);
+	GetPointCloudPoints(LoadedPoints);
 	FindExtremes(LoadedPoints); // Needed to be able to compute transformations between PC, Local and World space
 	SpaceTransformPCToLocal(LoadedPoints);
 	PointCloud = PrepareRenderingSettings(LoadedPoints, TEXT("PointCloud1"), TEXT("Settings1")); // use a predefined configuration (for now)
@@ -69,12 +69,24 @@ void UPointCloudRenderingComponent::SpawnPointCloudHostActor(FTransform const &S
 	PointCloudHostActor = dynamic_cast<APointCloudActor*>(spawned);
 }
 
-void UPointCloudRenderingComponent::LoadPointsFromFile(TArray<FPointCloudPoint> &LoadedPoints)
+void UPointCloudRenderingComponent::GetPointCloudPoints(TArray<FPointCloudPoint> &LoadedPoints)
 {
-	
+	LoadedPoints = LoadPointCloudFromFileTXT(PointCloudFile, FVector2D(0.0f, 256.0f * 256.0f - 1.0f));
+	TArray<FPointCloudPoint> ClassPoints = LoadPointCloudFromFileTXT(PointCloudClassFile, FVector2D(0.0f, 255.0f));
+	TArray<FPointCloudPoint> PointNoFloor;
+	for (int i = 0; i < LoadedPoints.Num(); i++) {
+		if (ClassPoints[i].Color.B != 2) {
+			PointNoFloor.Add(LoadedPoints[i]);
+		}
+	}
+	LoadedPoints = PointNoFloor;
+}
+
+TArray<FPointCloudPoint> UPointCloudRenderingComponent::LoadPointCloudFromFileTXT(FString filename, FVector2D RgbRange)
+{
 	EPointCloudColorMode Mode = EPointCloudColorMode::RGB;
-	FPointCloudFileHeader Header = FPointCloudHelper::ReadFileHeader(TEXT("C:\\Users\\km\\Desktop\\graphics\\data\\simon.txt"));
-	Header.RGBRange = FVector2D(0.0f, 256.0f * 256.0f - 1.0f);
+	FPointCloudFileHeader Header = FPointCloudHelper::ReadFileHeader(filename);
+	Header.RGBRange = RgbRange;
 
 	TArray<int32> SelectedColumns;
 	for (int32 i = 0; i < 6; i++) {
@@ -82,7 +94,9 @@ void UPointCloudRenderingComponent::LoadPointsFromFile(TArray<FPointCloudPoint> 
 	}
 	Header.SelectedColumns = SelectedColumns;
 
-	FPointCloudHelper::ImportAsText(TEXT("C:\\Users\\km\\Desktop\\graphics\\data\\simon.txt"), LoadedPoints, Mode, 0, 500000000, Header); 
+	TArray<FPointCloudPoint> points;
+	FPointCloudHelper::ImportAsText(filename, points, Mode, 0, 500000000, Header);
+	return points;
 }
 
 void UPointCloudRenderingComponent::FindExtremes(TArray<FPointCloudPoint> & LoadedPoints)

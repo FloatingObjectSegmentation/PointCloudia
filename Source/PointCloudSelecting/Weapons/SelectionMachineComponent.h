@@ -42,10 +42,6 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	void DestroyAndReinitialize();
-
-	void KillALittleMore();
-
 
 
 // VARIABLES
@@ -97,4 +93,6 @@ private:
 	void FindTemplateMesh(TArray<AActor *> &FoundActors);
 	void ExtractStaticMeshFromActor(TArray<AActor *> & FoundActors, const int32 &i);
 	UPointCloudRenderingComponent* GetPointCloudRenderingComponent();
+	void DestroyAndReinitialize();
+	void KillALittleMore();
 };
