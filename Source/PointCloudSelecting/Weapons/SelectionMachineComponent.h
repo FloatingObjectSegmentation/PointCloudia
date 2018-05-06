@@ -76,7 +76,7 @@ public:
 	void StartSelection();
 
 	UFUNCTION(BlueprintCallable)
-	void FinishSelection();
+	FString FinishSelection();
 
 	UFUNCTION(BlueprintCallable)
 	void TransformX(int32 way);

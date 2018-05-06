@@ -14,7 +14,6 @@ UPointCloudRenderingComponent::UPointCloudRenderingComponent()
 void UPointCloudRenderingComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	SavingFolder = FString("C:/Users/km/Desktop/playground/unreal/unreal_workspaces/PointCloudia");
 
 	LoadPointsFromFile(LoadedPoints);
 	FindExtremes(LoadedPoints); // Needed to be able to compute transformations between PC, Local and World space
@@ -33,15 +32,16 @@ void UPointCloudRenderingComponent::TickComponent(float DeltaTime, ELevelTick Ti
 #pragma endregion
 
 #pragma region API
-void UPointCloudRenderingComponent::ProcessSelectedPoints(FVector& CenterInWorldSpace, FVector& BoundingBox)
+FString UPointCloudRenderingComponent::ProcessSelectedPoints(FVector& CenterInWorldSpace, FVector& BoundingBox)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Inside ProcessSelectedPoints"));
 	TArray<int32> QueryResultIndices;
 	FindSelectionIndices(CenterInWorldSpace, BoundingBox, QueryResultIndices);
 	TArray<FPointCloudPoint> SelectedPoints = GetPointSubset(QueryResultIndices);
-	SavePoints(SelectedPoints);
+	FString PointCloudTxt = SelectedPointsToPointCloudTxtFormatString(SelectedPoints);
 	MarkSubsetWithinLoadedPoints(QueryResultIndices);
 	RerenderPointCloud();
+	return PointCloudTxt;
 }
 #pragma endregion
 
@@ -164,7 +164,7 @@ void UPointCloudRenderingComponent::RerenderPointCloud()
 	SpawnPointCloudHostActor(FTransform(FVector(0.0f)));
 	PointCloudHostActor->SetPointCloud(tmpPointCloud);
 }
-void UPointCloudRenderingComponent::SavePoints(TArray<FPointCloudPoint> PointsToSave)
+FString UPointCloudRenderingComponent::SelectedPointsToPointCloudTxtFormatString(TArray<FPointCloudPoint> PointsToSave)
 {
 	// transform points to PC space
 	for (int32 i = 0; i < PointsToSave.Num(); i++) {
@@ -188,18 +188,14 @@ void UPointCloudRenderingComponent::SavePoints(TArray<FPointCloudPoint> PointsTo
 		total.Append(line);
 		total.Append("\n");
 	}
-	
+
+	/* Class doesn't save the file anymore, merely returns the string
 	FGuid guid = FGuid::NewGuid();
 	FString filename = SavingFolder;
 	filename.Append("/");
 	filename.Append(guid.ToString() + TEXT(".txt"));
-
-	
-
-
-	bool isSuccessful = FFileHelper::SaveStringToFile(filename, TEXT("SOMETHING"), FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get());
-	UE_LOG(LogTemp, Warning, TEXT("%s"), *filename);
-	if (isSuccessful)
-		UE_LOG(LogTemp, Warning, TEXT("successful"));
+	SavingFile = filename;
+	*/
+	return total;
 }
 #pragma endregion

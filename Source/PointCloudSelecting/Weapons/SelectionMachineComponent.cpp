@@ -68,9 +68,9 @@ void USelectionMachineComponent::TransformZ(int32 way)
 	CommitTransformation(FVector(0, 0, way));
 }
 
-void USelectionMachineComponent::FinishSelection() 
+FString USelectionMachineComponent::FinishSelection() 
 {
-	if (BoundingBox == nullptr) return;
+	if (BoundingBox == nullptr) return FString();
 
 	// obtain the boundaries
 	FVector Origin;
@@ -85,13 +85,16 @@ void USelectionMachineComponent::FinishSelection()
 	// it will suffice until I learn to implement better styles (IE observer pattern).
 	 PointCloudComponent = GetPointCloudRenderingComponent();
 	 UE_LOG(LogTemp, Warning, TEXT("I'm here"));
-	 if (PointCloudComponent != nullptr)
-		UE_LOG(LogTemp, Warning, TEXT("PointCloudComponent was not nullptr"));
-		PointCloudComponent->ProcessSelectedPoints(Origin, BoundingExtent);
+	 FString PointCloudText = "";
+	 if (PointCloudComponent != nullptr) {
+		 UE_LOG(LogTemp, Warning, TEXT("PointCloudComponent was not nullptr"));
+		 PointCloudText = PointCloudComponent->ProcessSelectedPoints(Origin, BoundingExtent);
+	 }
 
 
 	// decay the BoundingBox
 	IsDying = true;
+	return PointCloudText;
 }
 
 #pragma endregion

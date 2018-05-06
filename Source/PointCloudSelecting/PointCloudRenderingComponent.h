@@ -33,7 +33,6 @@ private:
 	float MaxX;
 	float MinY;
 	float MinZ;
-	FString SavingFolder;
 
 public:	
 	UPointCloudRenderingComponent();
@@ -47,7 +46,7 @@ public:
 public: // API
 
 	UFUNCTION(BlueprintCallable)
-	void ProcessSelectedPoints(FVector& CenterInWorldSpace, FVector& BoundingBox);
+	FString ProcessSelectedPoints(FVector& CenterInWorldSpace, FVector& BoundingBox);
 
 protected: // auxiliary
 	void SpaceTransformPCToLocal(TArray<FPointCloudPoint> &LoadedPoints);
@@ -59,5 +58,5 @@ protected: // auxiliary
 	TArray<FPointCloudPoint> GetPointSubset(TArray<int32> &QueryResultIndices);
 	void FindSelectionIndices(FVector & CenterInWorldSpace, FVector & BoundingBox, TArray<int32> &QueryResultIndices);
 	void RerenderPointCloud();
-	void SavePoints(TArray<FPointCloudPoint> PointsToSave);
+	FString SelectedPointsToPointCloudTxtFormatString(TArray<FPointCloudPoint> PointsToSave);
 };
