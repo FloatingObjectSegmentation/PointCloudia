@@ -16,6 +16,17 @@ void UPointCloudRenderingComponent::BeginPlay()
 	Super::BeginPlay();
 
 	GetPointCloudPoints(LoadedPoints);
+	
+	// This MUST be called before removeGroundPoints because it needs the indices to be
+	// preserved, while remove ground points actually removes points from the cloud!!!!
+	if (colorFloatingObject) {
+		ColorFloatingObjects();
+	}
+
+	if (removeFloor) {
+		RemoveGroundPoints(LoadedPoints);
+	}
+
 	FindExtremes(LoadedPoints); // Needed to be able to compute transformations between PC, Local and World space
 	SpaceTransformPCToLocal(LoadedPoints);
 	PointCloud = PrepareRenderingSettings(LoadedPoints, TEXT("PointCloud1"), TEXT("Settings1")); // use a predefined configuration (for now)
@@ -72,14 +83,66 @@ void UPointCloudRenderingComponent::SpawnPointCloudHostActor(FTransform const &S
 void UPointCloudRenderingComponent::GetPointCloudPoints(TArray<FPointCloudPoint> &LoadedPoints)
 {
 	LoadedPoints = LoadPointCloudFromFileTXT(PointCloudFile, FVector2D(0.0f, 256.0f * 256.0f - 1.0f));
-	TArray<FPointCloudPoint> ClassPoints = LoadPointCloudFromFileTXT(PointCloudClassFile, FVector2D(0.0f, 255.0f));
+}
+
+void UPointCloudRenderingComponent::RemoveGroundPoints(TArray<FPointCloudPoint> & LoadedPoints)
+{
+	FString ClassFileContent;
+	FFileHelper::LoadFileToString(ClassFileContent, *PointCloudClassFile);
+	TArray<FString> Array;
+	ClassFileContent.ParseIntoArray(Array, TEXT("\n"));
 	TArray<FPointCloudPoint> PointNoFloor;
-	for (int i = 0; i < LoadedPoints.Num(); i++) {
-		if (ClassPoints[i].Color.B != 2) {
+
+	for (int32 i = 0; i < Array.Num(); i++) {
+		int32 ClassValue = FCString::Atoi(*Array[i]);
+		if (ClassValue != 2) { // 2 represents the floor
 			PointNoFloor.Add(LoadedPoints[i]);
 		}
 	}
 	LoadedPoints = PointNoFloor;
+}
+
+void UPointCloudRenderingComponent::ColorFloatingObjects()
+{
+	// load the file
+	FString FloatingObjectFileContent;
+	FFileHelper::LoadFileToString(FloatingObjectFileContent, *FloatingObjectFile);
+
+	// split by lines
+	TArray<FString> Lines;
+	FloatingObjectFileContent.ParseIntoArray(Lines, TEXT("\n"));
+
+	// determine which one you want to use and parse it
+	TArray<FString> PreferredValues;
+	for (int32 lineIdx = 0; lineIdx < Lines.Num(); lineIdx++) {
+		FString CurrentLine = Lines[lineIdx];
+
+		TArray<FString> Values;
+		CurrentLine.ParseIntoArray(Values, TEXT(" "));
+
+		if (FCString::Atof(*Values[0]) == preferredFloatingObjectRadius) {
+			PreferredValues = Values;
+			break;
+		}
+		else if (lineIdx == Lines.Num() - 1) {
+			PreferredValues = Values;
+			UE_LOG(LogTemp, Warning, TEXT("Warning: The preferred RBNN radius result was not found in the results file. The last line in the file was used instead"));
+		}
+	}
+
+	// update the actual stuff
+	for (int32 i = 0; i < PreferredValues.Num() - 2; i++) { // -2 to avoid errors of boundaries
+
+		// watch out: the first value in the results line is the radius, thus the indices are shifted by 1 to the right
+		int32 CurrentValue = FCString::Atoi(*PreferredValues[i + 1]);
+
+		if (CurrentValue != -1) { // mark the floating point
+			LoadedPoints[i].Color.R = 0;
+			LoadedPoints[i].Color.G = 0;
+			LoadedPoints[i].Color.B = 255;
+		}
+			
+	}
 }
 
 TArray<FPointCloudPoint> UPointCloudRenderingComponent::LoadPointCloudFromFileTXT(FString filename, FVector2D RgbRange)

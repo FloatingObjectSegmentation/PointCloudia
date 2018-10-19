@@ -18,6 +18,8 @@
 #include "PointCloudHelper.h"
 #include "PointCloudActor.h"
 #include "Engine/World.h"
+#include "Runtime/Core/Public/Misc/FileHelper.h"
+#include "Runtime/Core/Public/HAL/PlatformFilemanager.h"
 #include "PointCloudRenderingComponent.generated.h"
 
 
@@ -34,8 +36,13 @@ private:
 	float MinY;
 	float MinZ;
 
-	FString PointCloudFile = TEXT("C:\\Users\\km\\Desktop\\playground\\unreal\\unreal_workspaces\\PointCloudia\\simon.txt");
-	FString PointCloudClassFile = TEXT("C:\\Users\\km\\Desktop\\playground\\unreal\\unreal_workspaces\\PointCloudia\\simonclass.txt");
+	bool removeFloor = false;
+	bool colorFloatingObject = true;
+	double preferredFloatingObjectRadius = 3;
+
+	FString PointCloudFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_99.txt");
+	FString PointCloudClassFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_99class.txt");
+	FString FloatingObjectFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\result459_99.pcd");
 	
 
 public:	
@@ -43,6 +50,8 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+
+	void ColorFloatingObjects();
 
 public:	
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -57,6 +66,7 @@ protected: // auxiliary
 	UPointCloud * PrepareRenderingSettings(TArray<FPointCloudPoint> &Points, FString pointCloudName, FString settingsName);
 	void SpawnPointCloudHostActor(FTransform const &SpawningTransform);
 	void GetPointCloudPoints(TArray<FPointCloudPoint> &LoadedPoints);
+	void RemoveGroundPoints(TArray<FPointCloudPoint> & LoadedPoints);
 	TArray<FPointCloudPoint> LoadPointCloudFromFileTXT(FString filename, FVector2D RgbRange = FVector2D(0.0f, 256.0f * 256.0f - 1.0f));
 	void FindExtremes(TArray<FPointCloudPoint> & LoadedPoints);
 	void MarkSubsetWithinLoadedPoints(TArray<int32> &QueryResultIndices);
