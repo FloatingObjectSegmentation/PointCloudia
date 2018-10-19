@@ -23,12 +23,9 @@ For now, the program is primarily meant to be used with LiDAR point clouds.
 ### Prepare
 
 1. Prepare your LAS point cloud
-    - Do this step only if you are using ARSO data
-        - Use ```lidar-orto-photo``` to enrich your ARSO point cloud with RGB data.
-    - Use ```las2txt``` to transform your .LAS or .LAZ point cloud into the correct format.
-        - ```las2txt -i yourpointcloud.laz -o cloud.txt -parse xyzRGB```
-        - ```las2txt -i yourpointcloud.laz -o cloudclass.txt -parse xyrRGc```
-2. Configure ```PointCloudRenderingComponent.h``` to use the above files for the main file and the file with classification data respectively. 
+    - Download and set up the ```LazPreprocessor``` repository in the ```FloatingObjectSegmentation``` organization.
+    - Follow the instructions given in the readme of the repository to acquire all files needed for visualizing.
+2. Configure ```PointCloudRenderingComponent.h``` to use the above files for the point cloud file, class file and floating object segment file.
 
 ### Usage
 
