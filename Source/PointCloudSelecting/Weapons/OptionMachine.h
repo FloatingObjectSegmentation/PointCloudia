@@ -34,6 +34,15 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	UFUNCTION(BlueprintCallable)
+		void ChangeColorMode();
+
+	UFUNCTION(BlueprintCallable)
+		void ChangeFilterMode();
+
+	UFUNCTION(BlueprintCallable)
+		void ChangeRbnnIndex();
+
 private:
 	UPointCloudRenderingComponent * PointCloudRenderingComponent;
 
@@ -42,8 +51,5 @@ private:
 	int32 CurrentRbnnIdx = 0;
 
 private:
-	void ChangeColorMode();
-	void ChangeFilterMode();
-	void ChangeRbnnIndex();
 	UPointCloudRenderingComponent* GetPointCloudRenderingComponent();
 };
