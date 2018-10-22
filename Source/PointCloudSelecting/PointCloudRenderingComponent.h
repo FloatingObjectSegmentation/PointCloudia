@@ -88,6 +88,16 @@ public: // API
 	UFUNCTION(BlueprintCallable)
 	FString ProcessSelectedPoints(FVector& CenterInWorldSpace, FVector& BoundingBox);
 
+	UFUNCTION(BlueprintCallable)
+	void ChangeColorMode(EFloatingSegmentColorMode mode);
+
+	UFUNCTION(BlueprintCallable)
+	void ChangeFilterMode(EFilterModeEnum mode);
+
+	UFUNCTION(BlueprintCallable)
+	void ChangeRbnnIndex();
+
+
 protected: // auxiliary
 
 	void LoadAndPreparePoints();

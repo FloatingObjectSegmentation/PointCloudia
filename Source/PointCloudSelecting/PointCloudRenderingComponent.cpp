@@ -45,6 +45,21 @@ FString UPointCloudRenderingComponent::ProcessSelectedPoints(FVector& CenterInWo
 	RerenderPointCloud();
 	return PointCloudTxt;
 }
+void UPointCloudRenderingComponent::ChangeColorMode(EFloatingSegmentColorMode mode)
+{
+	FloatingSegmentColorMode = mode;
+	RerenderPointCloud();
+}
+void UPointCloudRenderingComponent::ChangeFilterMode(EFilterModeEnum mode)
+{
+	FilterMode = mode;
+	RerenderPointCloud();
+}
+void UPointCloudRenderingComponent::ChangeRbnnIndex()
+{
+	currentRbnnIndex = (currentRbnnIndex + 1) % RbnnResults.Num();
+	RerenderPointCloud();
+}
 #pragma endregion
 
 #pragma region auxiliary
@@ -77,7 +92,6 @@ void UPointCloudRenderingComponent::RerenderPointCloud()
 		// index not preserved operations
 		FilterPoints(FilteredPoints);
 	}
-	
 
 	if (PointCloudHostActor != nullptr)
 		PointCloudHostActor->Destroy();
