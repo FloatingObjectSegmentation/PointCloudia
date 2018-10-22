@@ -65,6 +65,8 @@ private:
 
 // METHODS
 public:
+
+	// pure selection machine stuff
 	UFUNCTION(BlueprintCallable)
 	void SetMode(ETransformEnum tmode);
 

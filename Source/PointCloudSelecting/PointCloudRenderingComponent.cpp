@@ -15,23 +15,14 @@ void UPointCloudRenderingComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	GetPointCloudPoints(LoadedPoints);
-	
-	// This MUST be called before removeGroundPoints because it needs the indices to be
-	// preserved, while remove ground points actually removes points from the cloud!!!!
-	if (colorFloatingObject) {
-		ColorFloatingObjects();
+	LoadAndPreparePoints();
+
+	if (UseFancyFeatures) {
+		LoadRbnnResults();
+		LoadClassifications();
 	}
 
-	if (removeFloor) {
-		RemoveGroundPoints(LoadedPoints);
-	}
-
-	FindExtremes(LoadedPoints); // Needed to be able to compute transformations between PC, Local and World space
-	SpaceTransformPCToLocal(LoadedPoints);
-	PointCloud = PrepareRenderingSettings(LoadedPoints, TEXT("PointCloud1"), TEXT("Settings1")); // use a predefined configuration (for now)
-	SpawnPointCloudHostActor(FTransform(FVector(0.0f)));
-	PointCloudHostActor->SetPointCloud(PointCloud);
+	RerenderPointCloud();
 
 	UE_LOG(LogTemp, Warning, TEXT("Point loaded %s"), *LoadedPoints[0].Color.ToString());
 }
@@ -57,54 +48,47 @@ FString UPointCloudRenderingComponent::ProcessSelectedPoints(FVector& CenterInWo
 #pragma endregion
 
 #pragma region auxiliary
-UPointCloud* UPointCloudRenderingComponent::PrepareRenderingSettings(TArray<FPointCloudPoint> &Points, FString pointCloudName, FString settingsName)
+void UPointCloudRenderingComponent::LoadAndPreparePoints()
 {
-	UPointCloud* PointCloud = NewObject<UPointCloud>(this->StaticClass(), *pointCloudName);
-	UPointCloudSettings* PointCloudSettings = NewObject<UPointCloudSettings>(this->StaticClass(), *settingsName);
-	PointCloudSettings->RenderMethod = EPointCloudRenderMethod::Sprite_Unlit_RGB;
-	PointCloudSettings->SpriteSize = FVector2D(0.4f, 0.4f);
-	PointCloudSettings->Scale = FVector(1.0f);
-	PointCloudSettings->Brightness = 8.f;
-	PointCloudSettings->Saturation = 4.5f;
-	PointCloudSettings->SectionSize = FVector(100.f);
-	PointCloud->SetSettings(PointCloudSettings);
-	PointCloud->SetPointCloudData(Points, true);
-	return PointCloud;
+	GetPointCloudPoints(LoadedPoints);
+	FindExtremes(LoadedPoints); // Needed to be able to compute transformations between PC, Local and World space
+	SpaceTransformPCToLocal(LoadedPoints);
 }
 
-void UPointCloudRenderingComponent::SpawnPointCloudHostActor(FTransform const &SpawningTransform)
+void UPointCloudRenderingComponent::RerenderPointCloud()
 {
-	UClass* param = APointCloudActor::StaticClass();
-	AActor* spawned = GetWorld()->SpawnActor(param, &SpawningTransform, FActorSpawnParameters());
-	FVector f = spawned->GetActorLocation();
-	PointCloudHostActor = dynamic_cast<APointCloudActor*>(spawned);
-}
+	FilteredPoints.Empty();
 
-void UPointCloudRenderingComponent::GetPointCloudPoints(TArray<FPointCloudPoint> &LoadedPoints)
-{
-	LoadedPoints = LoadPointCloudFromFileTXT(PointCloudFile, FVector2D(0.0f, 256.0f * 256.0f - 1.0f));
-}
-
-void UPointCloudRenderingComponent::RemoveGroundPoints(TArray<FPointCloudPoint> & LoadedPoints)
-{
-	FString ClassFileContent;
-	FFileHelper::LoadFileToString(ClassFileContent, *PointCloudClassFile);
-	TArray<FString> Array;
-	ClassFileContent.ParseIntoArray(Array, TEXT("\n"));
-	TArray<FPointCloudPoint> PointNoFloor;
-
-	for (int32 i = 0; i < Array.Num(); i++) {
-		int32 ClassValue = FCString::Atoi(*Array[i]);
-		if (ClassValue != 2) { // 2 represents the floor
-			PointNoFloor.Add(LoadedPoints[i]);
-		}
+	// copy originals to result buffer
+	TArray<FPointCloudPoint> NewPointCloud;
+	for (int32 i = 0; i < LoadedPoints.Num(); i++) {
+		float Rnorm = LoadedPoints[i].Color.R / 256.0f;
+		float Gnorm = LoadedPoints[i].Color.G / 256.0f;
+		float Bnorm = LoadedPoints[i].Color.B / 256.0f;
+		NewPointCloud.Emplace(LoadedPoints[i].Location.X, LoadedPoints[i].Location.Y, LoadedPoints[i].Location.Z,
+			Rnorm, Gnorm, Bnorm);
 	}
-	LoadedPoints = PointNoFloor;
+	FilteredPoints = NewPointCloud;
+
+	if (UseFancyFeatures) {
+		// index preserved operations
+		ColorPoints(FilteredPoints);
+
+		// index not preserved operations
+		FilterPoints(FilteredPoints);
+	}
+	
+
+	if (PointCloudHostActor != nullptr)
+		PointCloudHostActor->Destroy();
+	PointCloudHostActor = nullptr;
+	UPointCloud* tmpPointCloud = PrepareRenderingSettings(FilteredPoints, "PointCloud2", "Settings2");
+	SpawnPointCloudHostActor(FTransform(FVector(0.0f)));
+	PointCloudHostActor->SetPointCloud(tmpPointCloud);
 }
 
-void UPointCloudRenderingComponent::ColorFloatingObjects()
+void UPointCloudRenderingComponent::LoadRbnnResults()
 {
-	// load the file
 	FString FloatingObjectFileContent;
 	FFileHelper::LoadFileToString(FloatingObjectFileContent, *FloatingObjectFile);
 
@@ -113,36 +97,124 @@ void UPointCloudRenderingComponent::ColorFloatingObjects()
 	FloatingObjectFileContent.ParseIntoArray(Lines, TEXT("\n"));
 
 	// determine which one you want to use and parse it
-	TArray<FString> PreferredValues;
+
+	// store all lines into array
 	for (int32 lineIdx = 0; lineIdx < Lines.Num(); lineIdx++) {
 		FString CurrentLine = Lines[lineIdx];
 
 		TArray<FString> Values;
 		CurrentLine.ParseIntoArray(Values, TEXT(" "));
 
-		if (FCString::Atof(*Values[0]) == preferredFloatingObjectRadius) {
-			PreferredValues = Values;
+		RbnnResults.Push(Values);
+	}
+
+	// set the current index
+	for (int32 lineIdx = 0; lineIdx < Lines.Num(); lineIdx++) {
+
+		if (FCString::Atof(*RbnnResults[lineIdx][0]) == preferredFloatingObjectRadius) {
+			currentRbnnIndex = lineIdx;
 			break;
 		}
 		else if (lineIdx == Lines.Num() - 1) {
-			PreferredValues = Values;
+			currentRbnnIndex = 0;
 			UE_LOG(LogTemp, Warning, TEXT("Warning: The preferred RBNN radius result was not found in the results file. The last line in the file was used instead"));
 		}
 	}
-
-	// update the actual stuff
-	for (int32 i = 0; i < PreferredValues.Num() - 2; i++) { // -2 to avoid errors of boundaries
-
-		// watch out: the first value in the results line is the radius, thus the indices are shifted by 1 to the right
-		int32 CurrentValue = FCString::Atoi(*PreferredValues[i + 1]);
-
-		if (CurrentValue != -1) { // mark the floating point
-			LoadedPoints[i].Color.R = 0;
-			LoadedPoints[i].Color.G = 0;
-			LoadedPoints[i].Color.B = 255;
-		}
-			
+}
+void UPointCloudRenderingComponent::LoadClassifications()
+{
+	FString ClassFileContent;
+	FFileHelper::LoadFileToString(ClassFileContent, *PointCloudClassFile);
+	TArray<FString> Array;
+	ClassFileContent.ParseIntoArray(Array, TEXT("\n"));
+	for (int32 i = 0; i < Array.Num(); i++) {
+		int32 ClassValue = FCString::Atoi(*Array[i]);
+		Classifications.Add(ClassValue);
 	}
+}
+
+#pragma region [processing selection]
+void UPointCloudRenderingComponent::MarkSubsetWithinLoadedPoints(TArray<int32> &QueryResultIndices)
+{
+	for (auto& i : QueryResultIndices) {
+		LoadedPoints[i].Color.R = 255;
+		LoadedPoints[i].Color.G = 0;
+		LoadedPoints[i].Color.B = 0;
+	}
+}
+TArray<FPointCloudPoint> UPointCloudRenderingComponent::GetPointSubset(TArray<int32> &QueryResultIndices)
+{
+	TArray<FPointCloudPoint> QueryResult;
+	for (auto& i : QueryResultIndices) {
+		// normalizing colors is not a side effect of this function. It just needs to be done so because
+		// the point cloud plugin is made so.
+		float normR = LoadedPoints[i].Color.R / 256.0f;
+		float normG = LoadedPoints[i].Color.G / 256.0f;
+		float normB = LoadedPoints[i].Color.B / 256.0f;
+		QueryResult.Emplace(LoadedPoints[i].Location.X, LoadedPoints[i].Location.Y, LoadedPoints[i].Location.Z,
+			normR, normG, normB);
+	}
+	return QueryResult;
+}
+void UPointCloudRenderingComponent::FindSelectionIndices(FVector & CenterInWorldSpace, FVector & BoundingBox, TArray<int32> &QueryResultIndices)
+{
+	for (int32 i = 0; i < LoadedPoints.Num(); i++) {
+
+		if (CenterInWorldSpace.X + BoundingBox.X > LoadedPoints[i].Location.X &&
+			CenterInWorldSpace.X - BoundingBox.X < LoadedPoints[i].Location.X &&
+			CenterInWorldSpace.Y + BoundingBox.Y > LoadedPoints[i].Location.Y &&
+			CenterInWorldSpace.Y - BoundingBox.Y < LoadedPoints[i].Location.Y &&
+			CenterInWorldSpace.Z + BoundingBox.Z > LoadedPoints[i].Location.Z &&
+			CenterInWorldSpace.Z - BoundingBox.Z < LoadedPoints[i].Location.Z)
+		{
+			QueryResultIndices.Add(i);
+		}
+	}
+}
+FString UPointCloudRenderingComponent::SelectedPointsToPointCloudTxtFormatString(TArray<FPointCloudPoint> PointsToSave)
+{
+	// transform points to PC space
+	for (int32 i = 0; i < PointsToSave.Num(); i++) {
+
+		// locations
+		PointsToSave[i].Location.X = MaxX - PointsToSave[i].Location.X;
+		PointsToSave[i].Location.Y += MinY;
+		PointsToSave[i].Location.Z += MinZ;
+
+		// colors
+		PointsToSave[i].Color.R = PointsToSave[i].Color.R * 255 * 255;
+		PointsToSave[i].Color.G = PointsToSave[i].Color.G * 255 * 255;
+		PointsToSave[i].Color.B = PointsToSave[i].Color.B * 255 * 255;
+	}
+
+	// save the points to disk
+	FString total;
+	for (auto& val : PointsToSave)
+	{
+		FString line = FString::Printf(TEXT("%.2f %.2f %.2f %d %d %d"), val.Location.X, val.Location.Y, val.Location.Z, (int32)val.Color.R, (int32)val.Color.G, (int32)val.Color.B);
+		total.Append(line);
+		total.Append("\n");
+	}
+
+	/* Class doesn't save the file anymore, merely returns the string
+	FGuid guid = FGuid::NewGuid();
+	FString filename = SavingFolder;
+	filename.Append("/");
+	filename.Append(guid.ToString() + TEXT(".txt"));
+	SavingFile = filename;
+	*/
+	return total;
+}
+
+#pragma endregion
+#pragma endregion
+
+#pragma region auxiliary to auxiliary
+#pragma region [setup]
+
+void UPointCloudRenderingComponent::GetPointCloudPoints(TArray<FPointCloudPoint> &LoadedPoints)
+{
+	LoadedPoints = LoadPointCloudFromFileTXT(PointCloudFile, FVector2D(0.0f, 256.0f * 256.0f - 1.0f));
 }
 
 TArray<FPointCloudPoint> UPointCloudRenderingComponent::LoadPointCloudFromFileTXT(FString filename, FVector2D RgbRange)
@@ -186,93 +258,155 @@ void UPointCloudRenderingComponent::SpaceTransformPCToLocal(TArray<FPointCloudPo
 	}
 
 }
+#pragma endregion
 
-void UPointCloudRenderingComponent::MarkSubsetWithinLoadedPoints(TArray<int32> &QueryResultIndices)
+#pragma region [rerender]
+UPointCloud* UPointCloudRenderingComponent::PrepareRenderingSettings(TArray<FPointCloudPoint> &Points, FString pointCloudName, FString settingsName)
 {
-	for (auto& i : QueryResultIndices) {
-		LoadedPoints[i].Color.R = 255;
-		LoadedPoints[i].Color.G = 0;
-		LoadedPoints[i].Color.B = 0;
+	UPointCloud* PointCloud = NewObject<UPointCloud>(this->StaticClass(), *pointCloudName);
+	UPointCloudSettings* PointCloudSettings = NewObject<UPointCloudSettings>(this->StaticClass(), *settingsName);
+	PointCloudSettings->RenderMethod = EPointCloudRenderMethod::Sprite_Unlit_RGB;
+	PointCloudSettings->SpriteSize = FVector2D(0.4f, 0.4f);
+	PointCloudSettings->Scale = FVector(1.0f);
+	PointCloudSettings->Brightness = 8.f;
+	PointCloudSettings->Saturation = 4.5f;
+	PointCloudSettings->SectionSize = FVector(100.f);
+	PointCloud->SetSettings(PointCloudSettings);
+	PointCloud->SetPointCloudData(Points, true);
+	return PointCloud;
+}
+
+void UPointCloudRenderingComponent::SpawnPointCloudHostActor(FTransform const &SpawningTransform)
+{
+	UClass* param = APointCloudActor::StaticClass();
+	AActor* spawned = GetWorld()->SpawnActor(param, &SpawningTransform, FActorSpawnParameters());
+	FVector f = spawned->GetActorLocation();
+	PointCloudHostActor = dynamic_cast<APointCloudActor*>(spawned);
+}
+#pragma endregion
+
+#pragma region [filtering]
+void UPointCloudRenderingComponent::FilterPoints(TArray<FPointCloudPoint> & Points)
+{
+	if (FilterMode == EFilterModeEnum::None)
+		return;
+	else if (FilterMode == EFilterModeEnum::FilterFloor) {
+		FilterFloorPoints();
+	}
+	else if (FilterMode == EFilterModeEnum::FilterNonFloating) {
+		FilterNonFloatingObjectPoints();
 	}
 }
-TArray<FPointCloudPoint> UPointCloudRenderingComponent::GetPointSubset(TArray<int32> &QueryResultIndices)
+void UPointCloudRenderingComponent::FilterFloorPoints()
 {
-	TArray<FPointCloudPoint> QueryResult;
-	for (auto& i : QueryResultIndices) {
-		// normalizing colors is not a side effect of this function. It just needs to be done so because
-		// the point cloud plugin is made so.
-		float normR = LoadedPoints[i].Color.R / 256.0f;
-		float normG = LoadedPoints[i].Color.G / 256.0f;
-		float normB = LoadedPoints[i].Color.B / 256.0f;
-		QueryResult.Emplace(LoadedPoints[i].Location.X, LoadedPoints[i].Location.Y, LoadedPoints[i].Location.Z,
-			normR, normG, normB);
-	}
-	return QueryResult;
-}
-void UPointCloudRenderingComponent::FindSelectionIndices(FVector & CenterInWorldSpace, FVector & BoundingBox, TArray<int32> &QueryResultIndices)
-{
-	for (int32 i = 0; i < LoadedPoints.Num(); i++) {
+	TArray<FPointCloudPoint> TempPoints;
+	for (int32 i = 0; i < Classifications.Num(); i++) {
 
-		if (CenterInWorldSpace.X + BoundingBox.X > LoadedPoints[i].Location.X &&
-			CenterInWorldSpace.X - BoundingBox.X < LoadedPoints[i].Location.X &&
-			CenterInWorldSpace.Y + BoundingBox.Y > LoadedPoints[i].Location.Y &&
-			CenterInWorldSpace.Y - BoundingBox.Y < LoadedPoints[i].Location.Y &&
-			CenterInWorldSpace.Z + BoundingBox.Z > LoadedPoints[i].Location.Z &&
-			CenterInWorldSpace.Z - BoundingBox.Z < LoadedPoints[i].Location.Z)
-		{
-			QueryResultIndices.Add(i);
+		if (Classifications[i] != 2) {
+			TempPoints.Add(FilteredPoints[i]);
+		}
+	}
+	FilteredPoints = TempPoints;
+}
+void UPointCloudRenderingComponent::FilterNonFloatingObjectPoints()
+{
+	TArray<FString> FOPoints = RbnnResults[currentRbnnIndex];
+	TArray<FPointCloudPoint> TempPoints;
+	// warn rbnn results are shifted for 1 to the right, because the first element is radius
+	for (int32 i = 1; i < FOPoints.Num() - 2; i++) {
+		if (FCString::Atof(*FOPoints[i]) != -1) {
+			TempPoints.Add(FilteredPoints[i - 1]);
+		}
+	}
+	FilteredPoints = TempPoints;
+}
+#pragma endregion
+
+#pragma region [coloring floating objects]
+void UPointCloudRenderingComponent::ColorPoints(TArray<FPointCloudPoint>& Points)
+{
+	if (FloatingSegmentColorMode == EFloatingSegmentColorMode::None)
+		return;
+	if (FloatingSegmentColorMode == EFloatingSegmentColorMode::Mixed) {
+		ColorPointsMixed(Points);
+	}
+	else if (FloatingSegmentColorMode == EFloatingSegmentColorMode::Uniform) {
+		ColorPointsUniform(Points);
+	}
+}
+
+void UPointCloudRenderingComponent::ColorPointsUniform(TArray<FPointCloudPoint> & Points)
+{
+	// update the actual stuff
+	TArray<FString> tmp = RbnnResults[currentRbnnIndex];
+	for (int32 i = 0; i < tmp.Num() - 2; i++) { // -2 to avoid errors of boundaries
+
+												// watch out: the first value in the results line is the radius, thus the indices are shifted by 1 to the right
+		int32 CurrentValue = FCString::Atoi(*tmp[i + 1]);
+
+		if (CurrentValue != -1) { // mark the floating point
+
+			Points[i].Color.R = 255;
+			Points[i].Color.G = 0;
+			Points[i].Color.B = 0;
 		}
 	}
 }
-void UPointCloudRenderingComponent::RerenderPointCloud()
+
+void UPointCloudRenderingComponent::ColorPointsMixed(TArray<FPointCloudPoint> & Points)
 {
-	TArray<FPointCloudPoint> NewPointCloud;
-	for (int32 i = 0; i < LoadedPoints.Num(); i++) {
-		float Rnorm = LoadedPoints[i].Color.R / 256.0f;
-		float Gnorm = LoadedPoints[i].Color.G / 256.0f;
-		float Bnorm = LoadedPoints[i].Color.B / 256.0f;
-		NewPointCloud.Emplace(LoadedPoints[i].Location.X, LoadedPoints[i].Location.Y, LoadedPoints[i].Location.Z,
-			Rnorm, Gnorm, Bnorm);
-	}
+	// update the actual stuff
+	TArray<FString> tmp = RbnnResults[currentRbnnIndex];
+	for (int32 i = 0; i < tmp.Num() - 2; i++) { // -2 to avoid errors of boundaries
 
-	PointCloudHostActor->Destroy();
-	PointCloudHostActor = nullptr;
-	UPointCloud* tmpPointCloud = PrepareRenderingSettings(NewPointCloud, "PointCloud2", "Settings2");
-	SpawnPointCloudHostActor(FTransform(FVector(0.0f)));
-	PointCloudHostActor->SetPointCloud(tmpPointCloud);
+												// watch out: the first value in the results line is the radius, thus the indices are shifted by 1 to the right
+		int32 CurrentValue = FCString::Atoi(*tmp[i + 1]);
+
+
+		TMap<int32, int32> ClassToColorMap;
+
+		if (CurrentValue != -1) { // mark the floating point
+
+			if (!ClassToColorMap.Contains(CurrentValue)) {
+				ClassToColorMap.Add(CurrentValue, FMath::RandRange(0, 5));
+			}
+
+			switch (ClassToColorMap[CurrentValue]) {
+			case 0:
+				Points[i].Color.R = 255;
+				Points[i].Color.G = 0;
+				Points[i].Color.B = 0;
+				break;
+			case 1:
+				Points[i].Color.R = 0;
+				Points[i].Color.G = 255;
+				Points[i].Color.B = 0;
+				break;
+			case 2:
+				Points[i].Color.R = 0;
+				Points[i].Color.G = 0;
+				Points[i].Color.B = 255;
+				break;
+			case 3:
+				Points[i].Color.R = 255;
+				Points[i].Color.G = 255;
+				Points[i].Color.B = 0;
+				break;
+			case 4:
+				Points[i].Color.R = 255;
+				Points[i].Color.G = 0;
+				Points[i].Color.B = 255;
+				break;
+			case 5:
+				Points[i].Color.R = 0;
+				Points[i].Color.G = 255;
+				Points[i].Color.B = 255;
+				break;
+			}
+		}
+
+	}
 }
-FString UPointCloudRenderingComponent::SelectedPointsToPointCloudTxtFormatString(TArray<FPointCloudPoint> PointsToSave)
-{
-	// transform points to PC space
-	for (int32 i = 0; i < PointsToSave.Num(); i++) {
+#pragma endregion
 
-		// locations
-		PointsToSave[i].Location.X = MaxX - PointsToSave[i].Location.X;
-		PointsToSave[i].Location.Y += MinY;
-		PointsToSave[i].Location.Z += MinZ;
-
-		// colors
-		PointsToSave[i].Color.R = PointsToSave[i].Color.R * 255 * 255;
-		PointsToSave[i].Color.G = PointsToSave[i].Color.G * 255 * 255;
-		PointsToSave[i].Color.B = PointsToSave[i].Color.B * 255 * 255;
-	}
-
-	// save the points to disk
-	FString total;
-	for (auto& val : PointsToSave) 
-	{
-		FString line = FString::Printf(TEXT("%.2f %.2f %.2f %d %d %d"), val.Location.X, val.Location.Y, val.Location.Z, (int32)val.Color.R, (int32)val.Color.G, (int32)val.Color.B);
-		total.Append(line);
-		total.Append("\n");
-	}
-
-	/* Class doesn't save the file anymore, merely returns the string
-	FGuid guid = FGuid::NewGuid();
-	FString filename = SavingFolder;
-	filename.Append("/");
-	filename.Append(guid.ToString() + TEXT(".txt"));
-	SavingFile = filename;
-	*/
-	return total;
-}
 #pragma endregion

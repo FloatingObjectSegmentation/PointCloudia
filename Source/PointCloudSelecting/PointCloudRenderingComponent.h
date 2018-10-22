@@ -18,10 +18,25 @@
 #include "PointCloudHelper.h"
 #include "PointCloudActor.h"
 #include "Engine/World.h"
-#include "Runtime/Core/Public/Misc/FileHelper.h"
 #include "Runtime/Core/Public/HAL/PlatformFilemanager.h"
 #include "PointCloudRenderingComponent.generated.h"
 
+
+UENUM(BlueprintType)		//"BlueprintType" is essential to include
+enum class EFilterModeEnum : uint8
+{
+	FilterFloor 		UMETA(DisplayName = "NonFloor"),
+	FilterNonFloating   UMETA(DisplayName = "Floating"),
+	None  				UMETA(DisplayName = "Scaling")
+};
+
+UENUM(BlueprintType)		//"BlueprintType" is essential to include
+enum class EFloatingSegmentColorMode : uint8
+{
+	Uniform				UMETA(DisplayName = "Uniform"),
+	Mixed				UMETA(DisplayName = "Mixed"),
+	None 				UMETA(DisplayName = "None")
+};
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class POINTCLOUDSELECTING_API UPointCloudRenderingComponent : public UActorComponent
@@ -29,21 +44,33 @@ class POINTCLOUDSELECTING_API UPointCloudRenderingComponent : public UActorCompo
 	GENERATED_BODY()
 
 private:
+
+	#pragma region [configuration]
+	bool UseFancyFeatures = true;
+	EFilterModeEnum FilterMode = EFilterModeEnum::FilterNonFloating;
+	EFloatingSegmentColorMode FloatingSegmentColorMode = EFloatingSegmentColorMode::Mixed;
+	FString PointCloudFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_99.txt");
+	FString PointCloudClassFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_99class.txt");
+	FString FloatingObjectFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\result459_99.pcd");
+	#pragma endregion
+
+	#pragma region [locals]
 	APointCloudActor * PointCloudHostActor;
+	TArray<FPointCloudPoint> FilteredPoints;
 	TArray<FPointCloudPoint> LoadedPoints;
 	UPointCloud* PointCloud;
 	float MaxX;
 	float MinY;
 	float MinZ;
 
-	bool removeFloor = false;
-	bool colorFloatingObject = true;
+	// rbnn
+	TArray<TArray<FString>> RbnnResults;
 	double preferredFloatingObjectRadius = 3;
+	int32 currentRbnnIndex;
 
-	FString PointCloudFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_99.txt");
-	FString PointCloudClassFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_99class.txt");
-	FString FloatingObjectFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\result459_99.pcd");
-	
+	// class data
+	TArray<int32> Classifications;
+	#pragma endregion
 
 public:	
 	UPointCloudRenderingComponent();
@@ -51,7 +78,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	void ColorFloatingObjects();
+	
 
 public:	
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -62,16 +89,30 @@ public: // API
 	FString ProcessSelectedPoints(FVector& CenterInWorldSpace, FVector& BoundingBox);
 
 protected: // auxiliary
+
+	void LoadAndPreparePoints();
+
+	void RerenderPointCloud();
+
+	void ColorPoints(TArray<FPointCloudPoint>& Points);
+	void ColorPointsUniform(TArray<FPointCloudPoint> & Points);
+	void ColorPointsMixed(TArray<FPointCloudPoint> & Points);
+	void LoadRbnnResults();
+	void LoadClassifications();
+	void FilterPoints(TArray<FPointCloudPoint> & LoadedPoints);
+
+	void FilterNonFloatingObjectPoints();
+
+	void FilterFloorPoints();
+
 	void SpaceTransformPCToLocal(TArray<FPointCloudPoint> &LoadedPoints);
 	UPointCloud * PrepareRenderingSettings(TArray<FPointCloudPoint> &Points, FString pointCloudName, FString settingsName);
 	void SpawnPointCloudHostActor(FTransform const &SpawningTransform);
 	void GetPointCloudPoints(TArray<FPointCloudPoint> &LoadedPoints);
-	void RemoveGroundPoints(TArray<FPointCloudPoint> & LoadedPoints);
 	TArray<FPointCloudPoint> LoadPointCloudFromFileTXT(FString filename, FVector2D RgbRange = FVector2D(0.0f, 256.0f * 256.0f - 1.0f));
 	void FindExtremes(TArray<FPointCloudPoint> & LoadedPoints);
 	void MarkSubsetWithinLoadedPoints(TArray<int32> &QueryResultIndices);
 	TArray<FPointCloudPoint> GetPointSubset(TArray<int32> &QueryResultIndices);
 	void FindSelectionIndices(FVector & CenterInWorldSpace, FVector & BoundingBox, TArray<int32> &QueryResultIndices);
-	void RerenderPointCloud();
 	FString SelectedPointsToPointCloudTxtFormatString(TArray<FPointCloudPoint> PointsToSave);
 };
