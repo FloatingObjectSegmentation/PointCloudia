@@ -37,8 +37,13 @@ public:
 private:
 	UPointCloudRenderingComponent * PointCloudRenderingComponent;
 
+	EFloatingSegmentColorMode CurrentColorMode = EFloatingSegmentColorMode::None;
+	EFilterModeEnum CurrentFilterMode = EFilterModeEnum::None;
+	int32 CurrentRbnnIdx = 0;
+
 private:
-	void ChangeColorMode(EFloatingSegmentColorMode mode);
-	void ChangeFilterMode(EFilterModeEnum mode);
-	void ChangeRbnnIndex(int32 index);
+	void ChangeColorMode();
+	void ChangeFilterMode();
+	void ChangeRbnnIndex();
+	UPointCloudRenderingComponent* GetPointCloudRenderingComponent();
 };

@@ -19,7 +19,7 @@ void UOptionMachine::BeginPlay()
 {
 	Super::BeginPlay();
 
-	
+	PointCloudRenderingComponent = GetPointCloudRenderingComponent();
 	// ...
 	
 }
@@ -33,16 +33,63 @@ void UOptionMachine::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	// ...
 }
 
-
-void UOptionMachine::ChangeColorMode(EFloatingSegmentColorMode mode) 
+void UOptionMachine::ChangeColorMode()
 {
-
+	switch (CurrentColorMode) {
+	case EFloatingSegmentColorMode::None:
+		CurrentColorMode = EFloatingSegmentColorMode::Uniform;
+		break;
+	case EFloatingSegmentColorMode::Uniform:
+		CurrentColorMode = EFloatingSegmentColorMode::Mixed;
+		break;
+	case EFloatingSegmentColorMode::Mixed:
+		CurrentColorMode = EFloatingSegmentColorMode::None;
+		break;
+	}
+	PointCloudRenderingComponent->ChangeColorMode(CurrentColorMode);
 }
-void UOptionMachine::ChangeFilterMode(EFilterModeEnum mode) 
-{
 
+void UOptionMachine::ChangeFilterMode()
+{
+	switch (CurrentFilterMode) {
+	case EFilterModeEnum::None:
+		CurrentFilterMode = EFilterModeEnum::FilterFloor;
+		break;
+	case EFilterModeEnum::FilterFloor:
+		CurrentFilterMode = EFilterModeEnum::FilterNonFloating;
+		break;
+	case EFilterModeEnum::FilterNonFloating:
+		CurrentFilterMode = EFilterModeEnum::None;
+		break;
+	}
+	PointCloudRenderingComponent->ChangeFilterMode(CurrentFilterMode);
 }
-void UOptionMachine::ChangeRbnnIndex(int32 index) 
-{
 
+void UOptionMachine::ChangeRbnnIndex()
+{
+	PointCloudRenderingComponent->ChangeRbnnIndex();
+}
+
+UPointCloudRenderingComponent* UOptionMachine::GetPointCloudRenderingComponent()
+{
+	// WARNING!! Very stupid style of communication between components (dangerous and slow), 
+	// it will suffice until I learn to implement better styles (IE observer pattern).
+	UPointCloudRenderingComponent* result = nullptr;
+
+	TSubclassOf<AActor> ClassToFind = AStaticMeshActor::StaticClass();
+	TArray<AActor*> FoundActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ClassToFind, FoundActors);
+	for (int32 i = 0; i < FoundActors.Num(); i++) {
+		FString str = FoundActors[i]->GetActorLabel();
+		if (str.Contains(TEXT("PointCloudAnchor"))) { // Dangerous -> relies on the name of the anchor never changing
+			TArray<UPointCloudRenderingComponent*> Components;
+			FoundActors[i]->GetComponents<UPointCloudRenderingComponent>(Components);
+			if (Components.Num() > 0) {
+				result = Components[0];
+				break;
+			}
+			break;
+		}
+	}
+	return result;
 }
