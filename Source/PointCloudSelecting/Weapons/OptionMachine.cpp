@@ -43,6 +43,9 @@ void UOptionMachine::ChangeColorMode()
 		CurrentColorMode = EFloatingSegmentColorMode::Mixed;
 		break;
 	case EFloatingSegmentColorMode::Mixed:
+		CurrentColorMode = EFloatingSegmentColorMode::Class;
+		break;
+	case EFloatingSegmentColorMode::Class:
 		CurrentColorMode = EFloatingSegmentColorMode::None;
 		break;
 	}

@@ -19,6 +19,7 @@
 #include "PointCloudActor.h"
 #include "Engine/World.h"
 #include "Runtime/Core/Public/HAL/PlatformFilemanager.h"
+#include "Runtime/Core/Public/Misc/Paths.h"
 #include "PointCloudRenderingComponent.generated.h"
 
 
@@ -35,7 +36,8 @@ enum class EFloatingSegmentColorMode : uint8
 {
 	Uniform				UMETA(DisplayName = "Uniform"),
 	Mixed				UMETA(DisplayName = "Mixed"),
-	None 				UMETA(DisplayName = "None")
+	None 				UMETA(DisplayName = "None"),
+	Class				UMETA(DisplayName = "Class")
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -49,9 +51,10 @@ private:
 	bool UseFancyFeatures = true;
 	EFilterModeEnum FilterMode = EFilterModeEnum::FilterNonFloating;
 	EFloatingSegmentColorMode FloatingSegmentColorMode = EFloatingSegmentColorMode::Mixed;
-	FString PointCloudFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_99.txt");
-	FString PointCloudClassFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_99class.txt");
-	FString FloatingObjectFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\result459_99.pcd");
+	FString PointCloudFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_100.txt");
+	FString PointCloudClassFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_100class.txt");
+	FString FloatingObjectFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\result459_100.pcd");
+	FString ClassColorsFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\colormap.txt");
 	#pragma endregion
 
 	#pragma region [locals]
@@ -65,11 +68,12 @@ private:
 
 	// rbnn
 	TArray<TArray<FString>> RbnnResults;
-	double preferredFloatingObjectRadius = 3;
+	double preferredFloatingObjectRadius = 1;
 	int32 currentRbnnIndex;
 
 	// class data
 	TArray<int32> Classifications;
+	TMap<int32, FVector> ClassToColorMap;
 	#pragma endregion
 
 public:	
@@ -105,10 +109,14 @@ protected: // auxiliary
 	void RerenderPointCloud();
 
 	void ColorPoints(TArray<FPointCloudPoint>& Points);
+	void ColorPointsByClass(TArray<FPointCloudPoint>& Points);
 	void ColorPointsUniform(TArray<FPointCloudPoint> & Points);
 	void ColorPointsMixed(TArray<FPointCloudPoint> & Points);
+	
 	void LoadRbnnResults();
 	void LoadClassifications();
+	void LoadDesiredClassColors();
+
 	void FilterPoints(TArray<FPointCloudPoint> & LoadedPoints);
 
 	void FilterNonFloatingObjectPoints();

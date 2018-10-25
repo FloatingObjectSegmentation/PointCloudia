@@ -20,6 +20,7 @@ void UPointCloudRenderingComponent::BeginPlay()
 	if (UseFancyFeatures) {
 		LoadRbnnResults();
 		LoadClassifications();
+		LoadDesiredClassColors();
 	}
 
 	RerenderPointCloud();
@@ -144,6 +145,36 @@ void UPointCloudRenderingComponent::LoadClassifications()
 	for (int32 i = 0; i < Array.Num(); i++) {
 		int32 ClassValue = FCString::Atoi(*Array[i]);
 		Classifications.Add(ClassValue);
+	}
+}
+void UPointCloudRenderingComponent::LoadDesiredClassColors() {
+	// non-obligatory
+	IPlatformFile& f = FPlatformFileManager::Get().GetPlatformFile();
+	if (!f.FileExists(*ClassColorsFile))
+		return;
+
+	FString ColorsFileContent;
+	FFileHelper::LoadFileToString(ColorsFileContent, *ClassColorsFile);
+	TArray<FString> Array;
+	ColorsFileContent.ParseIntoArray(Array, TEXT("\n"));
+	for (int32 i = 0; i < Array.Num(); i++) {
+
+		FString key;
+		FString value;
+		FString Separator = TEXT(":");
+		Array[i].Split(Separator, &key, &value);
+		key.Trim();
+		value.Trim();
+
+		int32 Key = FCString::Atoi(*key);
+
+		TArray<FString> vector;
+		value.ParseIntoArray(vector, TEXT(" "));
+		int32 R = FCString::Atoi(*vector[0]);
+		int32 G = FCString::Atoi(*vector[1]);
+		int32 B = FCString::Atoi(*vector[2]);
+
+		ClassToColorMap.Add(Key, FVector(R, G, B));
 	}
 }
 
@@ -339,13 +370,31 @@ void UPointCloudRenderingComponent::FilterNonFloatingObjectPoints()
 #pragma region [coloring floating objects]
 void UPointCloudRenderingComponent::ColorPoints(TArray<FPointCloudPoint>& Points)
 {
-	if (FloatingSegmentColorMode == EFloatingSegmentColorMode::None)
+	switch (FloatingSegmentColorMode) {
+	case EFloatingSegmentColorMode::None:
 		return;
-	if (FloatingSegmentColorMode == EFloatingSegmentColorMode::Mixed) {
+		break;
+	case EFloatingSegmentColorMode::Class:
+		ColorPointsByClass(Points);
+		break;
+	case EFloatingSegmentColorMode::Mixed:
 		ColorPointsMixed(Points);
-	}
-	else if (FloatingSegmentColorMode == EFloatingSegmentColorMode::Uniform) {
+		break;
+	case EFloatingSegmentColorMode::Uniform:
 		ColorPointsUniform(Points);
+		break;
+	}
+}
+
+void UPointCloudRenderingComponent::ColorPointsByClass(TArray<FPointCloudPoint>& Points) {
+	// color the points by the actual underlying class
+	for (int i = 0; i < Classifications.Num(); i++) {
+		if (ClassToColorMap.Contains(Classifications[i])) {
+			FVector color = ClassToColorMap[Classifications[i]];
+			Points[i].Color.R = color.X;
+			Points[i].Color.G = color.Y;
+			Points[i].Color.B = color.Z;
+		}
 	}
 }
 
@@ -371,14 +420,13 @@ void UPointCloudRenderingComponent::ColorPointsMixed(TArray<FPointCloudPoint> & 
 {
 	// update the actual stuff
 	TArray<FString> tmp = RbnnResults[currentRbnnIndex];
+	TMap<int32, int32> ClassToColorMap;
 	for (int32 i = 0; i < tmp.Num() - 2; i++) { // -2 to avoid errors of boundaries
 
 												// watch out: the first value in the results line is the radius, thus the indices are shifted by 1 to the right
 		int32 CurrentValue = FCString::Atoi(*tmp[i + 1]);
-
-
-		TMap<int32, int32> ClassToColorMap;
-
+		if (i % 100000 == 0)
+			UE_LOG(LogTemp, Warning, TEXT("colored %d"), i);
 		if (CurrentValue != -1) { // mark the floating point
 
 			if (!ClassToColorMap.Contains(CurrentValue)) {
