@@ -73,6 +73,11 @@ void UOptionMachine::ChangeRbnnIndex()
 	PointCloudRenderingComponent->ChangeRbnnIndex();
 }
 
+void UOptionMachine::MoveToNextFloatingObject()
+{
+	PointCloudRenderingComponent->MoveToNextFloatingObject();
+}
+
 UPointCloudRenderingComponent* UOptionMachine::GetPointCloudRenderingComponent()
 {
 	// WARNING!! Very stupid style of communication between components (dangerous and slow), 

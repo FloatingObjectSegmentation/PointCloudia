@@ -20,6 +20,7 @@
 #include "Engine/World.h"
 #include "Runtime/Core/Public/HAL/PlatformFilemanager.h"
 #include "Runtime/Core/Public/Misc/Paths.h"
+#include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
 #include "PointCloudRenderingComponent.generated.h"
 
 
@@ -71,6 +72,11 @@ private:
 	double preferredFloatingObjectRadius = 1;
 	int32 currentRbnnIndex;
 
+	// rbnn viewing of clusters
+	int32 currentViewedClusterIndex = 0;
+	TMap<int32, FVector> CurrentClusterToLocationMap;
+	TArray<int32> RbnnClusterIndices;
+
 	// class data
 	TArray<int32> Classifications;
 	TMap<int32, FVector> ClassToColorMap;
@@ -101,6 +107,11 @@ public: // API
 	UFUNCTION(BlueprintCallable)
 	void ChangeRbnnIndex();
 
+	UFUNCTION(BlueprintCallable)
+	void MoveToNextFloatingObject();
+
+	
+
 
 protected: // auxiliary
 
@@ -122,7 +133,8 @@ protected: // auxiliary
 	void FilterNonFloatingObjectPoints();
 
 	void FilterFloorPoints();
-
+	
+	void RecomputeSelectedRbnnClusterParameters();
 	void SpaceTransformPCToLocal(TArray<FPointCloudPoint> &LoadedPoints);
 	UPointCloud * PrepareRenderingSettings(TArray<FPointCloudPoint> &Points, FString pointCloudName, FString settingsName);
 	void SpawnPointCloudHostActor(FTransform const &SpawningTransform);

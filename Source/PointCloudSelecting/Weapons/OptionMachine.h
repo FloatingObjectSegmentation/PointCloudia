@@ -43,6 +43,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void ChangeRbnnIndex();
 
+	UFUNCTION(BlueprintCallable)
+		void MoveToNextFloatingObject();
+
 private:
 	UPointCloudRenderingComponent * PointCloudRenderingComponent;
 

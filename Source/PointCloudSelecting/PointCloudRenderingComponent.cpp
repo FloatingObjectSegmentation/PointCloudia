@@ -59,8 +59,22 @@ void UPointCloudRenderingComponent::ChangeFilterMode(EFilterModeEnum mode)
 void UPointCloudRenderingComponent::ChangeRbnnIndex()
 {
 	currentRbnnIndex = (currentRbnnIndex + 1) % RbnnResults.Num();
+	RecomputeSelectedRbnnClusterParameters();
 	RerenderPointCloud();
 }
+
+void UPointCloudRenderingComponent::MoveToNextFloatingObject()
+{
+	// change the current viewed object index
+	currentViewedClusterIndex = (currentViewedClusterIndex + 1) % RbnnClusterIndices.Num();
+
+	// get the location of new viewed object
+	FVector Location = CurrentClusterToLocationMap[RbnnClusterIndices[currentViewedClusterIndex]];
+
+	// move the camera to that location
+	UGameplayStatics::GetPlayerPawn(GetWorld(), 0)->SetActorLocation(Location);
+}
+
 #pragma endregion
 
 #pragma region auxiliary
@@ -135,6 +149,9 @@ void UPointCloudRenderingComponent::LoadRbnnResults()
 			UE_LOG(LogTemp, Warning, TEXT("Warning: The preferred RBNN radius result was not found in the results file. The last line in the file was used instead"));
 		}
 	}
+
+	// compute the selected rbnn cluster parameters
+	RecomputeSelectedRbnnClusterParameters();
 }
 void UPointCloudRenderingComponent::LoadClassifications()
 {
@@ -468,6 +485,28 @@ void UPointCloudRenderingComponent::ColorPointsMixed(TArray<FPointCloudPoint> & 
 		}
 
 	}
+}
+#pragma endregion
+
+#pragma region [changing rbnn radius]
+void UPointCloudRenderingComponent::RecomputeSelectedRbnnClusterParameters()
+{
+	TArray<FString> CurrentRbnnResults = RbnnResults[currentRbnnIndex];
+	TSet<int32> ClusterIndexSet;
+	for (int i = 1; i < CurrentRbnnResults.Num() - 2; i++) {
+		if (CurrentRbnnResults[i] != "-1") {
+			int32 curridx = FCString::Atoi(*CurrentRbnnResults[i]);
+			ClusterIndexSet.Add(curridx);
+
+			// add the locations so we can know where to move the camera when we select a new cluster
+			if (!CurrentClusterToLocationMap.Contains(curridx)) {
+				CurrentClusterToLocationMap.Add(curridx, FVector(LoadedPoints[i - 1].Location.X, LoadedPoints[i - 1].Location.Y, LoadedPoints[i - 1].Location.Z));
+			}
+		}
+	}
+
+	// store cluster indices - to know which ones you can choose from for viewing.
+	RbnnClusterIndices = ClusterIndexSet.Array();
 }
 #pragma endregion
 
