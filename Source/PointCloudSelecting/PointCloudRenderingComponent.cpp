@@ -155,12 +155,26 @@ void UPointCloudRenderingComponent::MoveToNextFloatingObject()
 		Marker = nullptr;
 	}
 	Marker = spawned;
-	MarkerHealth = 100;
+	MarkerHealth = 300;
 }
 
-void UPointCloudRenderingComponent::LabelCurrentCandidate()
+FString UPointCloudRenderingComponent::GetSaveLabelResultString(int32 Label)
 {
 	// determine which points belong to the chosen cluster in the first place
+	TArray<int32> loadedPointsIndices = CurrentClusterToClusterPointIndicesMap[RbnnClusterIndices[currentRbnnIndex]];
+
+
+	// save the points to disk
+	FString total;
+	total.Append(FString::Printf(TEXT("%d\n"), Label)); // label
+	total.Append(RbnnResults[currentRbnnIndex][0]); // rbnn radius
+	total.Append("\n");
+	for (int32 index : loadedPointsIndices)
+	{
+		FString line = FString::Printf(TEXT("%d\n"), index); // indices into the original dataset
+		total.Append(line);
+	}
+	return total;
 }
 
 #pragma endregion

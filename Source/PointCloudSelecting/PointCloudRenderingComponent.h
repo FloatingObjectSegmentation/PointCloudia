@@ -119,7 +119,8 @@ public: // API
 	UFUNCTION(BlueprintCallable)
 	void MoveToNextFloatingObject();
 
-	void LabelCurrentCandidate();
+	UFUNCTION(BlueprintCallable)
+	FString GetSaveLabelResultString(int32 Label);
 
 	
 
