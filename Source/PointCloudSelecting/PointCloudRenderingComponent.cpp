@@ -85,7 +85,8 @@ void UPointCloudRenderingComponent::MoveToNextFloatingObject()
 	currentViewedClusterIndex = (currentViewedClusterIndex + 1) % RbnnClusterIndices.Num();
 
 	// get the location of new viewed object
-	FVector Location = CurrentClusterToLocationMap[RbnnClusterIndices[currentViewedClusterIndex]];
+	FPointCloudPoint ClusterPoint = LoadedPoints[CurrentClusterToClusterPointIndicesMap[RbnnClusterIndices[currentViewedClusterIndex]][0]];
+	FVector Location = FVector(ClusterPoint.Location.X, ClusterPoint.Location.Y, ClusterPoint.Location.Z);
 	FRotator rotator = UKismetMathLibrary::FindLookAtRotation(Location + FVector(0.0f, 30.0f, 30.0f), Location);
 
 	// move the camera to that location
@@ -93,7 +94,17 @@ void UPointCloudRenderingComponent::MoveToNextFloatingObject()
 	PlayerPawn->SetActorLocationAndRotation(Location + FVector(0.0f, 30.0f, 30.0f), rotator);
 
 	if (GEngine) {
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Showing canditated %d / %d"), currentViewedClusterIndex, RbnnClusterIndices.Num()));
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Showing canditate %d / %d"), currentViewedClusterIndex, RbnnClusterIndices.Num()));
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Contains %d points"), CurrentClusterToClusterPointIndicesMap[RbnnClusterIndices[currentViewedClusterIndex]].Num()));
+		for (int i = 0; i < CurrentClusterToClusterPointIndicesMap[RbnnClusterIndices[currentViewedClusterIndex]].Num(); i++) {
+			int index = CurrentClusterToClusterPointIndicesMap[RbnnClusterIndices[currentViewedClusterIndex]][i];
+			float x = LoadedPoints[index].Location.X;
+			float y = LoadedPoints[index].Location.Y;
+			float z = LoadedPoints[index].Location.Z;
+			int32 cls = Classifications[index];
+			int32 rbnncls = FCString::Atoi(*RbnnResults[currentRbnnIndex][index + 1]);
+			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Orange, FString::Printf(TEXT("loc=(%f, %f, %f), class=%d, rbnn=%d"), x, y, z, cls, rbnncls));
+		}
 	}
 
 	FTransform f(rotator, Location, FVector(0.05f, 0.05f, 0.05f));
@@ -145,6 +156,11 @@ void UPointCloudRenderingComponent::MoveToNextFloatingObject()
 	}
 	Marker = spawned;
 	MarkerHealth = 100;
+}
+
+void UPointCloudRenderingComponent::LabelCurrentCandidate()
+{
+	// determine which points belong to the chosen cluster in the first place
 }
 
 #pragma endregion
@@ -444,6 +460,7 @@ void UPointCloudRenderingComponent::FilterFloorPoints()
 }
 void UPointCloudRenderingComponent::FilterNonFloatingObjectPoints()
 {
+	/// WARNING: DOES NOT ALWAYS WORK CORRECTLY. NEED TO DEBUG. DO NOT USE FOR THE TIME BEING.
 	TArray<FString> FOPoints = RbnnResults[currentRbnnIndex];
 	TArray<FPointCloudPoint> TempPoints;
 	// warn rbnn results are shifted for 1 to the right, because the first element is radius
@@ -563,21 +580,37 @@ void UPointCloudRenderingComponent::ColorPointsMixed(TArray<FPointCloudPoint> & 
 #pragma region [changing rbnn radius]
 void UPointCloudRenderingComponent::RecomputeSelectedRbnnClusterParameters()
 {
+	CurrentClusterToClusterPointIndicesMap.Empty();
+	RbnnClusterIndices.Empty();
+
+
 	TArray<FString> CurrentRbnnResults = RbnnResults[currentRbnnIndex];
 	TSet<int32> ClusterIndexSet;
-	for (int i = 1; i < CurrentRbnnResults.Num() - 2; i++) {
-		if (CurrentRbnnResults[i] != "-1") {
-			int32 curridx = FCString::Atoi(*CurrentRbnnResults[i]);
-			ClusterIndexSet.Add(curridx);
+	for (int pointIdx = 1; pointIdx < CurrentRbnnResults.Num() - 2; pointIdx++) {
+		if (CurrentRbnnResults[pointIdx] != "-1") {
+			int32 clusterIdx = FCString::Atoi(*CurrentRbnnResults[pointIdx]);
+			ClusterIndexSet.Add(clusterIdx);
 
 			// add the locations so we can know where to move the camera when we select a new cluster
-			if (!CurrentClusterToLocationMap.Contains(curridx)) {
-				CurrentClusterToLocationMap.Add(curridx, FVector(LoadedPoints[i - 1].Location.X, LoadedPoints[i - 1].Location.Y, LoadedPoints[i - 1].Location.Z));
+			if (!CurrentClusterToClusterPointIndicesMap.Contains(clusterIdx)) {
+				TArray<int32> insert;
+				insert.Add(pointIdx - 1);
+				CurrentClusterToClusterPointIndicesMap.Add(clusterIdx, insert);
+			}
+			else {
+				CurrentClusterToClusterPointIndicesMap[clusterIdx].Add(pointIdx - 1);
 			}
 		}
 	}
 
+	for (auto& Elem : CurrentClusterToClusterPointIndicesMap) {
+		if (GEngine) {
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, FString::Printf(TEXT("Cluster %d has %d members"), Elem.Key, Elem.Value.Num()));
+		}
+	}
+
 	// store cluster indices - to know which ones you can choose from for viewing.
+	
 	RbnnClusterIndices = ClusterIndexSet.Array();
 }
 #pragma endregion

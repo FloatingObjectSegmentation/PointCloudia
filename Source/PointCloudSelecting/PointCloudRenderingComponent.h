@@ -79,7 +79,7 @@ private:
 
 	// rbnn viewing of clusters
 	int32 currentViewedClusterIndex = 0;
-	TMap<int32, FVector> CurrentClusterToLocationMap;
+	TMap<int32, TArray<int32>> CurrentClusterToClusterPointIndicesMap;
 	TArray<int32> RbnnClusterIndices;
 	AActor *Marker;
 	FString MarkerMaterialPath = TEXT("/Game/Materials/ParameterizedTranslucentGold");
@@ -118,6 +118,8 @@ public: // API
 
 	UFUNCTION(BlueprintCallable)
 	void MoveToNextFloatingObject();
+
+	void LabelCurrentCandidate();
 
 	
 
