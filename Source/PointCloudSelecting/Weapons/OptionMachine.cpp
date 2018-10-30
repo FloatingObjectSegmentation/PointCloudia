@@ -33,6 +33,7 @@ void UOptionMachine::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	// ...
 }
 
+#pragma region [api]
 void UOptionMachine::ChangeColorMode()
 {
 	switch (CurrentColorMode) {
@@ -78,6 +79,52 @@ void UOptionMachine::MoveToNextFloatingObject()
 	PointCloudRenderingComponent->MoveToNextFloatingObject();
 }
 
+FString UOptionMachine::LabelCurrentObject(EFloatingObjectLabel Label)
+{
+	FString label;
+	switch (Label) {
+	case EFloatingObjectLabel::Floating:
+		label = TEXT("Floating");
+		break;
+	case EFloatingObjectLabel::LikelyFloating:
+		label = TEXT("LikelyFloating");
+		break;
+	case EFloatingObjectLabel::MaybeFloating:
+		label = TEXT("MaybeFloating");
+		break;
+	case EFloatingObjectLabel::NotFloating:
+		label = TEXT("NotFloating");
+		break;
+	}
+
+	if (GEngine) {
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("EXPORTING LABEL: %s"), *label));
+	}
+	return PointCloudRenderingComponent->GetSaveLabelResultString(Label);
+}
+
+FString UOptionMachine::GetDatasetDirectory() {
+	FString path = PointCloudRenderingComponent->GetDatasetPath();
+	FString name = GetDatasetName();
+	path.Find(name);
+	return path.Left(path.Len() - name.Len());
+}
+
+FString UOptionMachine::GetDatasetName() {
+	FString path = PointCloudRenderingComponent->GetDatasetPath();
+	return FPaths::GetBaseFilename(path);
+}
+
+FString UOptionMachine::GetLabelsFolderPath() {
+	FString datasetPath = GetDatasetDirectory();
+	FString path = FPaths::Combine(datasetPath, TEXT("labels"));
+	return path;
+}
+
+#pragma endregion
+
+
+#pragma region [auxiliary]
 UPointCloudRenderingComponent* UOptionMachine::GetPointCloudRenderingComponent()
 {
 	// WARNING!! Very stupid style of communication between components (dangerous and slow), 
@@ -101,3 +148,4 @@ UPointCloudRenderingComponent* UOptionMachine::GetPointCloudRenderingComponent()
 	}
 	return result;
 }
+#pragma endregion

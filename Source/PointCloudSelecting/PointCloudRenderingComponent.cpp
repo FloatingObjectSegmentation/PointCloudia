@@ -107,7 +107,7 @@ void UPointCloudRenderingComponent::MoveToNextFloatingObject()
 		}
 	}
 
-	FTransform f(rotator, Location, FVector(0.05f, 0.05f, 0.05f));
+	FTransform f(rotator, Location, FVector(0.15f, 0.15f, 0.15f));
 
 	UClass* param = AStaticMeshActor::StaticClass();
 	AActor* spawned = GetWorld()->SpawnActor(param, &f, FActorSpawnParameters());
@@ -158,15 +158,34 @@ void UPointCloudRenderingComponent::MoveToNextFloatingObject()
 	MarkerHealth = 300;
 }
 
-FString UPointCloudRenderingComponent::GetSaveLabelResultString(int32 Label)
+FString UPointCloudRenderingComponent::GetSaveLabelResultString(EFloatingObjectLabel Label)
 {
 	// determine which points belong to the chosen cluster in the first place
 	TArray<int32> loadedPointsIndices = CurrentClusterToClusterPointIndicesMap[RbnnClusterIndices[currentRbnnIndex]];
 
+	int32 LabelInt = 0;
+	switch (Label) {
+	case EFloatingObjectLabel::Floating:
+		LabelInt = 0;
+		break;
+	case EFloatingObjectLabel::LikelyFloating:
+		LabelInt = 1;
+		break;
+	case EFloatingObjectLabel::MaybeFloating:
+		LabelInt = 2;
+		break;
+	case EFloatingObjectLabel::NotFloating:
+		LabelInt = 3;
+		break;
+	}
+
+	if (GEngine) {
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("CANDIDATE NUMBER: %d, INDEX: %d"), currentRbnnIndex, RbnnClusterIndices[currentRbnnIndex]));
+	}
 
 	// save the points to disk
 	FString total;
-	total.Append(FString::Printf(TEXT("%d\n"), Label)); // label
+	total.Append(FString::Printf(TEXT("%d\n"), LabelInt)); // label
 	total.Append(RbnnResults[currentRbnnIndex][0]); // rbnn radius
 	total.Append("\n");
 	for (int32 index : loadedPointsIndices)
@@ -177,6 +196,10 @@ FString UPointCloudRenderingComponent::GetSaveLabelResultString(int32 Label)
 	return total;
 }
 
+
+FString UPointCloudRenderingComponent::GetDatasetPath() {
+	return PointCloudFile;
+}
 #pragma endregion
 
 #pragma region auxiliary

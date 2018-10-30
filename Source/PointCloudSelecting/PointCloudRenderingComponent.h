@@ -37,13 +37,22 @@ enum class EFilterModeEnum : uint8
 	None  				UMETA(DisplayName = "Scaling")
 };
 
-UENUM(BlueprintType)		//"BlueprintType" is essential to include
+UENUM(BlueprintType)
 enum class EFloatingSegmentColorMode : uint8
 {
 	Uniform				UMETA(DisplayName = "Uniform"),
 	Mixed				UMETA(DisplayName = "Mixed"),
 	None 				UMETA(DisplayName = "None"),
 	Class				UMETA(DisplayName = "Class")
+};
+
+UENUM(BlueprintType)
+enum class EFloatingObjectLabel : uint8
+{
+	Floating					UMETA(DisplayName = "Floating"),
+	LikelyFloating				UMETA(DisplayName = "LikelyFloating"),
+	MaybeFloating 				UMETA(DisplayName = "MaybeFloating"),
+	NotFloating					UMETA(DisplayName = "NotFloating")
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -120,7 +129,10 @@ public: // API
 	void MoveToNextFloatingObject();
 
 	UFUNCTION(BlueprintCallable)
-	FString GetSaveLabelResultString(int32 Label);
+	FString GetSaveLabelResultString(EFloatingObjectLabel Label);
+
+	UFUNCTION(BlueprintCallable)
+	FString GetDatasetPath();
 
 	
 

@@ -11,11 +11,13 @@
 #include "Engine/StaticMesh.h"
 #include "Runtime/Engine/Classes/Materials/Material.h"
 #include "GameFramework/Actor.h"
+#include "Runtime/Engine/Classes/Engine/Engine.h"
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
 #include "Runtime/Engine/Classes/Materials/MaterialInstanceDynamic.h"
 #include "../PointCloudRenderingComponent.h"
+#include "Runtime/Core/Public/HAL/PlatformFilemanager.h"
+#include "Runtime/Core/Public/GenericPlatform/GenericPlatformFile.h"
 #include "OptionMachine.generated.h"
-
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class POINTCLOUDSELECTING_API UOptionMachine : public UActorComponent
@@ -45,6 +47,18 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 		void MoveToNextFloatingObject();
+
+	UFUNCTION(BlueprintCallable)
+		FString LabelCurrentObject(EFloatingObjectLabel Label);
+
+	UFUNCTION(BlueprintCallable)
+		FString GetDatasetDirectory();
+
+	UFUNCTION(BlueprintCallable)
+		FString GetDatasetName();
+
+	UFUNCTION(BlueprintCallable)
+		FString GetLabelsFolderPath();
 
 private:
 	UPointCloudRenderingComponent * PointCloudRenderingComponent;
