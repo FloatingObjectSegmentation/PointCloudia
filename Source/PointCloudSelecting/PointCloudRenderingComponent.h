@@ -21,6 +21,11 @@
 #include "Runtime/Core/Public/HAL/PlatformFilemanager.h"
 #include "Runtime/Core/Public/Misc/Paths.h"
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
+#include "Runtime/Engine/Classes/Engine/Engine.h"
+#include "Runtime/Engine/Classes/Kismet/KismetMathLibrary.h"
+#include "Engine/StaticMeshActor.h"
+#include "Components/StaticMeshComponent.h"
+#include "Runtime/Engine/Classes/Materials/MaterialInstanceDynamic.h"
 #include "PointCloudRenderingComponent.generated.h"
 
 
@@ -76,6 +81,10 @@ private:
 	int32 currentViewedClusterIndex = 0;
 	TMap<int32, FVector> CurrentClusterToLocationMap;
 	TArray<int32> RbnnClusterIndices;
+	AActor *Marker;
+	FString MarkerMaterialPath = TEXT("/Game/Materials/ParameterizedTranslucentGold");
+	UMaterialInstanceDynamic* MarkerMaterialInstance;
+	int32 MarkerHealth = 300;
 
 	// class data
 	TArray<int32> Classifications;

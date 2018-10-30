@@ -31,6 +31,22 @@ void UPointCloudRenderingComponent::BeginPlay()
 void UPointCloudRenderingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	// deplete marker and destroy after some time
+	if (MarkerHealth > 0) {
+		MarkerHealth--;
+
+		if (MarkerMaterialInstance)
+			MarkerMaterialInstance->SetScalarParameterValue(TEXT("Opacity"), (float)MarkerHealth / 300.0f);
+
+		if (MarkerHealth == 0) {
+			if (Marker) {
+				Marker->Destroy();
+				Marker = nullptr;
+			}
+		}
+	}
+
 }
 #pragma endregion
 
@@ -70,9 +86,65 @@ void UPointCloudRenderingComponent::MoveToNextFloatingObject()
 
 	// get the location of new viewed object
 	FVector Location = CurrentClusterToLocationMap[RbnnClusterIndices[currentViewedClusterIndex]];
+	FRotator rotator = UKismetMathLibrary::FindLookAtRotation(Location + FVector(0.0f, 30.0f, 30.0f), Location);
 
 	// move the camera to that location
-	UGameplayStatics::GetPlayerPawn(GetWorld(), 0)->SetActorLocation(Location);
+	APawn *PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+	PlayerPawn->SetActorLocationAndRotation(Location + FVector(0.0f, 30.0f, 30.0f), rotator);
+
+	if (GEngine) {
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Showing canditated %d / %d"), currentViewedClusterIndex, RbnnClusterIndices.Num()));
+	}
+
+	FTransform f(rotator, Location, FVector(0.05f, 0.05f, 0.05f));
+
+	UClass* param = AStaticMeshActor::StaticClass();
+	AActor* spawned = GetWorld()->SpawnActor(param, &f, FActorSpawnParameters());
+	
+
+	// box spawning
+	
+	UStaticMesh* desired = nullptr;
+	TSubclassOf<AActor> ClassToFind = AStaticMeshActor::StaticClass();
+	TArray<AActor*> FoundActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ClassToFind, FoundActors);
+	
+	
+	for (int32 i = 0; i < FoundActors.Num(); i++) {
+		FString str = FoundActors[i]->GetActorLabel();
+		if (str.Contains(TEXT("Cube"))) {
+			TArray<UStaticMeshComponent*> Components;
+			FoundActors[i]->GetComponents<UStaticMeshComponent>(Components);
+			if (Components.Num() > 0) {
+				desired = Components[0]->GetStaticMesh();
+				//UE_LOG(LogTemp, Warning, TEXT("MESH EXTRACTED!"));
+			}
+			break;
+		}
+	}
+
+	TArray<UStaticMeshComponent*> Components;
+	spawned->GetComponents<UStaticMeshComponent>(Components);
+	for (int32 i = 0; i < Components.Num(); i++) {
+		UStaticMeshComponent* StaticMeshComponent = Components[i];
+		StaticMeshComponent->SetMobility(EComponentMobility::Movable);
+		StaticMeshComponent->SetStaticMesh(desired);
+
+		UMaterial* mat = LoadObject<UMaterial>(UMaterial::StaticClass(), *MarkerMaterialPath);
+		UMaterialInstanceDynamic* MaterialInstance = UMaterialInstanceDynamic::Create(mat, mat);
+		MaterialInstance->SetScalarParameterValue(TEXT("Opacity"), 1.0f);
+
+		MarkerMaterialInstance = MaterialInstance;
+
+		StaticMeshComponent->SetMaterial(0, MaterialInstance);
+	}
+
+	if (Marker) {
+		Marker->Destroy();
+		Marker = nullptr;
+	}
+	Marker = spawned;
+	MarkerHealth = 100;
 }
 
 #pragma endregion
