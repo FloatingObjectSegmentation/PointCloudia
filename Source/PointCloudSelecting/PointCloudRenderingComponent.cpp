@@ -20,6 +20,7 @@ void UPointCloudRenderingComponent::BeginPlay()
 	if (UseFancyFeatures) {
 		LoadRbnnResults();
 		LoadClassifications();
+		LoadIntensities();
 		LoadDesiredClassColors();
 	}
 
@@ -289,6 +290,17 @@ void UPointCloudRenderingComponent::LoadClassifications()
 		Classifications.Add(ClassValue);
 	}
 }
+void UPointCloudRenderingComponent::LoadIntensities()
+{
+	FString IntensityFileContent;
+	FFileHelper::LoadFileToString(IntensityFileContent, *PointCloudIntensityFile);
+	TArray<FString> Array;
+	IntensityFileContent.ParseIntoArray(Array, TEXT("\n"));
+	for (int32 i = 0; i < Array.Num(); i++) {
+		float IntensityValue = FCString::Atof(*Array[i]);
+		Intensities.Add(IntensityValue);
+	}
+}
 void UPointCloudRenderingComponent::LoadDesiredClassColors() {
 	// non-obligatory
 	IPlatformFile& f = FPlatformFileManager::Get().GetPlatformFile();
@@ -526,6 +538,19 @@ void UPointCloudRenderingComponent::ColorPoints(TArray<FPointCloudPoint>& Points
 	case EFloatingSegmentColorMode::Uniform:
 		ColorPointsUniform(Points);
 		break;
+	case EFloatingSegmentColorMode::Intensity:
+		ColorPointsByIntensity(Points);
+		break;
+	}
+}
+
+void UPointCloudRenderingComponent::ColorPointsByIntensity(TArray<FPointCloudPoint>& Points) {
+	// color the points by the actual underlying class
+	for (int i = 0; i < Intensities.Num(); i++) {
+		float intensity = Intensities[i];
+		Points[i].Color.R = FMath::Min(255.0f, intensity);
+		Points[i].Color.G = 0;
+		Points[i].Color.B = FMath::Min(255.0f, intensity / 256.0f);
 	}
 }
 

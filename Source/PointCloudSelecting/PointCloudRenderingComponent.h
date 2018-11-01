@@ -43,7 +43,8 @@ enum class EFloatingSegmentColorMode : uint8
 	Uniform				UMETA(DisplayName = "Uniform"),
 	Mixed				UMETA(DisplayName = "Mixed"),
 	None 				UMETA(DisplayName = "None"),
-	Class				UMETA(DisplayName = "Class")
+	Class				UMETA(DisplayName = "Class"),
+	Intensity			UMETA(DisplayName = "Intensity")
 };
 
 UENUM(BlueprintType)
@@ -66,9 +67,10 @@ private:
 	bool UseFancyFeatures = true;
 	EFilterModeEnum FilterMode = EFilterModeEnum::FilterNonFloating;
 	EFloatingSegmentColorMode FloatingSegmentColorMode = EFloatingSegmentColorMode::Mixed;
-	FString PointCloudFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_100.txt");
-	FString PointCloudClassFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_100class.txt");
-	FString FloatingObjectFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\result459_100.pcd");
+	FString PointCloudFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_101.txt");
+	FString PointCloudClassFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_101class.txt");
+	FString PointCloudIntensityFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_101intensity.txt");
+	FString FloatingObjectFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\result459_101.pcd");
 	FString ClassColorsFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\colormap.txt");
 	#pragma endregion
 
@@ -98,6 +100,9 @@ private:
 	// class data
 	TArray<int32> Classifications;
 	TMap<int32, FVector> ClassToColorMap;
+
+	// intensity data
+	TArray<float> Intensities;
 	#pragma endregion
 
 public:	
@@ -147,9 +152,11 @@ protected: // auxiliary
 	void ColorPointsByClass(TArray<FPointCloudPoint>& Points);
 	void ColorPointsUniform(TArray<FPointCloudPoint> & Points);
 	void ColorPointsMixed(TArray<FPointCloudPoint> & Points);
+	void ColorPointsByIntensity(TArray<FPointCloudPoint>& Points);
 	
 	void LoadRbnnResults();
 	void LoadClassifications();
+	void LoadIntensities();
 	void LoadDesiredClassColors();
 
 	void FilterPoints(TArray<FPointCloudPoint> & LoadedPoints);

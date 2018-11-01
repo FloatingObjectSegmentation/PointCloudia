@@ -47,6 +47,9 @@ void UOptionMachine::ChangeColorMode()
 		CurrentColorMode = EFloatingSegmentColorMode::Class;
 		break;
 	case EFloatingSegmentColorMode::Class:
+		CurrentColorMode = EFloatingSegmentColorMode::Intensity;
+		break;
+	case EFloatingSegmentColorMode::Intensity:
 		CurrentColorMode = EFloatingSegmentColorMode::None;
 		break;
 	}
