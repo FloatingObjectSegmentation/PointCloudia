@@ -233,6 +233,9 @@ void UPointCloudRenderingComponent::RerenderPointCloud()
 		// index preserved operations
 		ColorPoints(FilteredPoints);
 
+		// VERIFY LABELS
+		ColorLabelsForVerification();
+
 		// index not preserved operations
 		FilterPoints(FilteredPoints);
 	}
@@ -243,6 +246,56 @@ void UPointCloudRenderingComponent::RerenderPointCloud()
 	UPointCloud* tmpPointCloud = PrepareRenderingSettings(FilteredPoints, "PointCloud2", "Settings2");
 	SpawnPointCloudHostActor(FTransform(FVector(0.0f)));
 	PointCloudHostActor->SetPointCloud(tmpPointCloud);
+}
+
+void UPointCloudRenderingComponent::ColorLabelsForVerification()
+{
+	FString LabelsFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_\\labels\\reduced.txt");
+
+	FString LabelsFileContent;
+	FFileHelper::LoadFileToString(LabelsFileContent, *LabelsFile);
+
+	// split by lines
+	TArray<FString> Lines;
+	LabelsFileContent.ParseIntoArray(Lines, TEXT("\n"));
+
+	// determine which one you want to use and parse it
+
+	// store all lines into array
+	for (int32 lineIdx = 0; lineIdx < Lines.Num(); lineIdx++) {
+		FString CurrentLine = Lines[lineIdx];
+
+		TArray<FString> Values;
+		CurrentLine.ParseIntoArray(Values, TEXT(" "));
+
+		int32 Label = FCString::Atoi(*Values[0]);
+		for (int i = 2; i < Values.Num(); i++) {
+			int32 index = FCString::Atoi(*Values[i]);
+
+			if (Label == 3) {
+				FilteredPoints[index].Color.R = 255;
+				FilteredPoints[index].Color.G = 0;
+				FilteredPoints[index].Color.B = 0;
+			}
+			else if (Label == 2) {
+				FilteredPoints[index].Color.R = 0;
+				FilteredPoints[index].Color.G = 255;
+				FilteredPoints[index].Color.B = 0;
+			}
+			else if (Label == 1) {
+				FilteredPoints[index].Color.R = 0;
+				FilteredPoints[index].Color.G = 0;
+				FilteredPoints[index].Color.B = 255;
+			}
+			else if (Label == 0) {
+				FilteredPoints[index].Color.R = 255;
+				FilteredPoints[index].Color.G = 255;
+				FilteredPoints[index].Color.B = 0;
+			}
+			
+		}
+
+	}
 }
 
 void UPointCloudRenderingComponent::LoadRbnnResults()

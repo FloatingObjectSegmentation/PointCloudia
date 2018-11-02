@@ -148,6 +148,8 @@ protected: // auxiliary
 
 	void RerenderPointCloud();
 
+	void ColorLabelsForVerification();
+
 	void ColorPoints(TArray<FPointCloudPoint>& Points);
 	void ColorPointsByClass(TArray<FPointCloudPoint>& Points);
 	void ColorPointsUniform(TArray<FPointCloudPoint> & Points);
