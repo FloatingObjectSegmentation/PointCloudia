@@ -78,6 +78,9 @@ void UPointCloudRenderingComponent::ChangeRbnnIndex()
 	currentRbnnIndex = (currentRbnnIndex + 1) % RbnnResults.Num();
 	RecomputeSelectedRbnnClusterParameters();
 	RerenderPointCloud();
+	if (GEngine) {
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Viewing RBNN results for radius = %s"), *RbnnResults[currentRbnnIndex][0]));
+	}
 }
 
 void UPointCloudRenderingComponent::MoveToNextFloatingObject()
@@ -104,7 +107,7 @@ void UPointCloudRenderingComponent::MoveToNextFloatingObject()
 			float z = LoadedPoints[index].Location.Z;
 			int32 cls = Classifications[index];
 			int32 rbnncls = FCString::Atoi(*RbnnResults[currentRbnnIndex][index + 1]);
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Orange, FString::Printf(TEXT("loc=(%f, %f, %f), class=%d, rbnn=%d"), x, y, z, cls, rbnncls));
+			// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Orange, FString::Printf(TEXT("loc=(%f, %f, %f), class=%d, rbnn=%d"), x, y, z, cls, rbnncls));
 		}
 	}
 
@@ -162,7 +165,7 @@ void UPointCloudRenderingComponent::MoveToNextFloatingObject()
 FString UPointCloudRenderingComponent::GetSaveLabelResultString(EFloatingObjectLabel Label)
 {
 	// determine which points belong to the chosen cluster in the first place
-	TArray<int32> loadedPointsIndices = CurrentClusterToClusterPointIndicesMap[RbnnClusterIndices[currentRbnnIndex]];
+	TArray<int32> loadedPointsIndices = CurrentClusterToClusterPointIndicesMap[RbnnClusterIndices[currentViewedClusterIndex]];
 
 	int32 LabelInt = 0;
 	switch (Label) {
@@ -181,7 +184,7 @@ FString UPointCloudRenderingComponent::GetSaveLabelResultString(EFloatingObjectL
 	}
 
 	if (GEngine) {
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("CANDIDATE NUMBER: %d, INDEX: %d"), currentRbnnIndex, RbnnClusterIndices[currentRbnnIndex]));
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("CANDIDATE NUMBER: %d, INDEX: %d"), currentViewedClusterIndex, RbnnClusterIndices[currentViewedClusterIndex]));
 	}
 
 	// save the points to disk
@@ -665,11 +668,11 @@ void UPointCloudRenderingComponent::RecomputeSelectedRbnnClusterParameters()
 		}
 	}
 
-	for (auto& Elem : CurrentClusterToClusterPointIndicesMap) {
+	/* for (auto& Elem : CurrentClusterToClusterPointIndicesMap) {
 		if (GEngine) {
 			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, FString::Printf(TEXT("Cluster %d has %d members"), Elem.Key, Elem.Value.Num()));
 		}
-	}
+	} */
 
 	// store cluster indices - to know which ones you can choose from for viewing.
 	

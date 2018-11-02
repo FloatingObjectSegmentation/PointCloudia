@@ -67,10 +67,10 @@ private:
 	bool UseFancyFeatures = true;
 	EFilterModeEnum FilterMode = EFilterModeEnum::FilterNonFloating;
 	EFloatingSegmentColorMode FloatingSegmentColorMode = EFloatingSegmentColorMode::Mixed;
-	FString PointCloudFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_101.txt");
-	FString PointCloudClassFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_101class.txt");
-	FString PointCloudIntensityFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_101intensity.txt");
-	FString FloatingObjectFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\result459_101.pcd");
+	FString PointCloudFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_100.txt");
+	FString PointCloudClassFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_100class.txt");
+	FString PointCloudIntensityFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_100intensity.txt");
+	FString FloatingObjectFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\result459_100.pcd");
 	FString ClassColorsFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\colormap.txt");
 	#pragma endregion
 
