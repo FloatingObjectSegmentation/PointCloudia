@@ -24,6 +24,12 @@ void UPointCloudRenderingComponent::BeginPlay()
 		LoadDesiredClassColors();
 	}
 
+	if (AugmentationMode == EAugmentationMode::Augmentation) {
+		UE_LOG(LogTemp, Warning, TEXT("STARTING AUGMENTATION"));
+		LoadAugmentables();
+		StartAugmentation();
+	}
+
 	RerenderPointCloud();
 
 	UE_LOG(LogTemp, Warning, TEXT("Point loaded %s"), *LoadedPoints[0].Color.ToString());
@@ -32,6 +38,7 @@ void UPointCloudRenderingComponent::BeginPlay()
 void UPointCloudRenderingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	time++;
 
 	// deplete marker and destroy after some time
 	if (MarkerHealth > 0) {
@@ -46,6 +53,24 @@ void UPointCloudRenderingComponent::TickComponent(float DeltaTime, ELevelTick Ti
 				Marker = nullptr;
 			}
 		}
+	}
+
+	if (AugmentationInProgress) {
+		if (time % 500 != 0) return;
+		if (!AugmentablesQueue.IsEmpty()) {
+			UE_LOG(LogTemp, Warning, TEXT("AUGMENTING SYNTHETIC EXAMPLE"));
+			TArray<FString> item;
+			AugmentablesQueue.Dequeue(item);
+			Augment(item);
+		}
+		else {
+			// !!!!!!!!!!!!!!!!!!!!!
+			// WARNING THIS IS NOT CORRECT. WE SHOULD RATHER WAIT ABOUT A MINUTE TO BE SURE THAT THE LAST AUGMENTATION IS COMPLETE.
+			// RIGHT NOW IT WILL ONLY WAIT FOR 500 FRAMES WHICH IS NOT ENOUGH!!!!!!!!
+			UE_LOG(LogTemp, Warning, TEXT("FINISHING AUGMENTATION"));
+			AugmentationInProgress = false;
+		}
+
 	}
 
 }
@@ -233,8 +258,8 @@ void UPointCloudRenderingComponent::RerenderPointCloud()
 		// index preserved operations
 		ColorPoints(FilteredPoints);
 
-		// VERIFY LABELS
-		ColorLabelsForVerification();
+		// VERIFY LABELS - turn this on only when you are verifying labels... (use python script to reduce label folder to one file first!)
+		// ColorLabelsForVerification();
 
 		// index not preserved operations
 		FilterPoints(FilteredPoints);
@@ -387,6 +412,70 @@ void UPointCloudRenderingComponent::LoadDesiredClassColors() {
 		ClassToColorMap.Add(Key, FVector(R, G, B));
 	}
 }
+
+#pragma region [augmentation]
+void UPointCloudRenderingComponent::Augment(TArray<FString> Augmentable)
+{
+	// parse the values
+	int id = FCString::Atoi(*Augmentable[0]);
+
+	TArray<FString> Values;
+	Augmentable[1].ParseIntoArray(Values, TEXT(","));
+	FVector position = FVector(FCString::Atof(*Values[0]), FCString::Atof(*Values[1]), FCString::Atof(*Values[2]));
+
+	FString shape = Augmentable[2];
+
+	Values.Empty();
+	Augmentable[3].ParseIntoArray(Values, TEXT(","));
+	FVector airplane_pos = FVector(FCString::Atof(*Values[0]), FCString::Atof(*Values[1]), FCString::Atof(*Values[2]));
+
+	float rbnn_r_min = FCString::Atof(*Augmentable[4]);
+
+	float rbnn_r_max = FCString::Atof(*Augmentable[5]);
+
+	UAugmentationMachineComponent* comp = NewObject<UAugmentationMachineComponent>(GetOwner());
+	comp->RegisterComponent();
+	GetOwner()->AddOwnedComponent(comp);
+
+
+
+	// rotation should be the correct one set at the start of the program
+	comp->StartScanning(airplane_pos, GetOwner()->GetActorRotation(), position, EAugmentationObject::Sphere);
+
+}
+
+void UPointCloudRenderingComponent::LoadAugmentables()
+{
+	FString AugmentablesFileContent;
+	FFileHelper::LoadFileToString(AugmentablesFileContent, *AugmentablesFile);
+
+	// split by lines
+	TArray<FString> Lines;
+	AugmentablesFileContent.ParseIntoArray(Lines, TEXT("\n"));
+
+	// store all lines into array
+	for (int32 lineIdx = 0; lineIdx < Lines.Num(); lineIdx++) {
+		FString CurrentLine = Lines[lineIdx];
+
+		TArray<FString> Values;
+		CurrentLine.ParseIntoArray(Values, TEXT(" "));
+
+		// Bad practice pushing only an array of strings, need to make structs eventually
+		// files are ordered:
+		// [id (int)] [position (vec3)] [shape (string)] [airplane_pos (vec3)] [rbnn_r_min (float)] [rbnn_r_max (float)]
+		// 1 1,2,3 balloon 1,2,1003 3.0 4.0
+		Augmentables.Push(Values);
+	}
+}
+
+void UPointCloudRenderingComponent::StartAugmentation()
+{
+	for (TArray<FString> x : Augmentables) {
+		AugmentablesQueue.Enqueue(x);
+	}
+	AugmentationInProgress = true;
+}
+#pragma endregion
 
 #pragma region [processing selection]
 void UPointCloudRenderingComponent::MarkSubsetWithinLoadedPoints(TArray<int32> &QueryResultIndices)

@@ -18,6 +18,7 @@
 #include "PointCloudHelper.h"
 #include "PointCloudActor.h"
 #include "Engine/World.h"
+#include "Weapons/AugmentationMachineComponent.h"
 #include "Runtime/Core/Public/HAL/PlatformFilemanager.h"
 #include "Runtime/Core/Public/Misc/Paths.h"
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
@@ -56,6 +57,14 @@ enum class EFloatingObjectLabel : uint8
 	NotFloating					UMETA(DisplayName = "NotFloating")
 };
 
+UENUM(BlueprintType)		//"BlueprintType" is essential to include
+enum class EAugmentationMode : uint8
+{
+	NoAugmentation 					UMETA(DisplayName = "NoAugmentation"),
+	Augmentation    				UMETA(DisplayName = "Augmentation"),
+	RenderAugmentationOnly  	    UMETA(DisplayName = "RenderAugmentationOnly")
+};
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class POINTCLOUDSELECTING_API UPointCloudRenderingComponent : public UActorComponent
 {
@@ -64,14 +73,20 @@ class POINTCLOUDSELECTING_API UPointCloudRenderingComponent : public UActorCompo
 private:
 
 	#pragma region [configuration]
+	int time = 0;
 	bool UseFancyFeatures = true;
+	bool AugmentationInProgress = false;
+
 	EFilterModeEnum FilterMode = EFilterModeEnum::FilterNonFloating;
 	EFloatingSegmentColorMode FloatingSegmentColorMode = EFloatingSegmentColorMode::Mixed;
-	FString PointCloudFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_100.txt");
-	FString PointCloudClassFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_100class.txt");
-	FString PointCloudIntensityFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_100intensity.txt");
-	FString FloatingObjectFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\result459_100.pcd");
+	EAugmentationMode AugmentationMode = EAugmentationMode::Augmentation;
+
+	FString PointCloudFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_99.txt");
+	FString PointCloudClassFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_99class.txt");
+	FString PointCloudIntensityFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_99intensity.txt");
+	FString FloatingObjectFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\result459_99.pcd");
 	FString ClassColorsFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\colormap.txt");
+	FString AugmentablesFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\augmentables_test.txt");
 	#pragma endregion
 
 	#pragma region [locals]
@@ -83,7 +98,7 @@ private:
 	float MinY;
 	float MinZ;
 
-	// rbnn
+	////// rbnn
 	TArray<TArray<FString>> RbnnResults;
 	double preferredFloatingObjectRadius = 1;
 	int32 currentRbnnIndex;
@@ -103,6 +118,16 @@ private:
 
 	// intensity data
 	TArray<float> Intensities;
+
+
+	////// augmentation
+
+
+	// augmentables data
+	TArray<TArray<FString>> Augmentables;
+
+	TQueue<TArray<FString>> AugmentablesQueue;
+
 	#pragma endregion
 
 public:	
@@ -145,6 +170,11 @@ public: // API
 protected: // auxiliary
 
 	void LoadAndPreparePoints();
+
+	void LoadAugmentables();
+
+	void StartAugmentation();
+	void Augment(TArray<FString> Augmentable);
 
 	void RerenderPointCloud();
 
