@@ -36,25 +36,6 @@ void UAugmentationMachineComponent::TickComponent(float DeltaTime, ELevelTick Ti
 #pragma endregion
 
 #pragma region [API]
-void UAugmentationMachineComponent::TransformX(int32 way)
-{
-	if (way == 0) return;
-	if (Airplane == nullptr) return;
-	Airplane->SetActorLocation(Airplane->GetActorLocation() + FVector(way * 50.0f, 0, 0));
-}
-void UAugmentationMachineComponent::TransformY(int32 way)
-{
-	if (way == 0) return;
-	if (Airplane == nullptr) return;
-	Airplane->SetActorLocation(Airplane->GetActorLocation() + FVector(0, way * 50.0f, 0));
-}
-void UAugmentationMachineComponent::TransformYaw(int32 way)
-{
-	if (way == 0) return;
-	if (Airplane == nullptr) return;
-	Airplane->SetActorRotation(Airplane->GetActorRotation() + FRotator(0, 0.3 * way, 0));
-}
-
 void UAugmentationMachineComponent::StartScanning(FVector airplaneLocation, FRotator airplaneOrientation, FVector objectLocation, EAugmentationObject object)
 {
 	Airplane = SpawnAirplane(airplaneLocation, airplaneOrientation);

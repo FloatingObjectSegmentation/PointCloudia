@@ -70,16 +70,17 @@ class POINTCLOUDSELECTING_API UPointCloudRenderingComponent : public UActorCompo
 {
 	GENERATED_BODY()
 
+public:
+	EFilterModeEnum FilterMode = EFilterModeEnum::FilterNonFloating;
+	EFloatingSegmentColorMode FloatingSegmentColorMode = EFloatingSegmentColorMode::Mixed;
+	EAugmentationMode AugmentationMode = EAugmentationMode::Augmentation;
+
 private:
 
 	#pragma region [configuration]
 	int time = 0;
 	bool UseFancyFeatures = true;
 	bool AugmentationInProgress = false;
-
-	EFilterModeEnum FilterMode = EFilterModeEnum::FilterNonFloating;
-	EFloatingSegmentColorMode FloatingSegmentColorMode = EFloatingSegmentColorMode::Mixed;
-	EAugmentationMode AugmentationMode = EAugmentationMode::Augmentation;
 
 	FString PointCloudFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_99.txt");
 	FString PointCloudClassFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_99class.txt");
@@ -128,6 +129,8 @@ private:
 
 	TQueue<TArray<FString>> AugmentablesQueue;
 
+	FTransform AugmentationStartingTransform;
+
 	#pragma endregion
 
 public:	
@@ -164,6 +167,9 @@ public: // API
 	UFUNCTION(BlueprintCallable)
 	FString GetDatasetPath();
 
+	UFUNCTION(BlueprintCallable)
+	void StartAugmentation(FTransform StartingTransform);
+
 	
 
 
@@ -173,7 +179,6 @@ protected: // auxiliary
 
 	void LoadAugmentables();
 
-	void StartAugmentation();
 	void Augment(TArray<FString> Augmentable);
 
 	void RerenderPointCloud();

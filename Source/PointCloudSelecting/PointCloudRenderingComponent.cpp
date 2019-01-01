@@ -229,6 +229,14 @@ FString UPointCloudRenderingComponent::GetSaveLabelResultString(EFloatingObjectL
 FString UPointCloudRenderingComponent::GetDatasetPath() {
 	return PointCloudFile;
 }
+void UPointCloudRenderingComponent::StartAugmentation(FTransform StartingTransform)
+{
+	AugmentationStartingTransform = StartingTransform;
+	for (TArray<FString> x : Augmentables) {
+		AugmentablesQueue.Enqueue(x);
+	}
+	AugmentationInProgress = true;
+}
 #pragma endregion
 
 #pragma region auxiliary
@@ -466,14 +474,6 @@ void UPointCloudRenderingComponent::LoadAugmentables()
 		// 1 1,2,3 balloon 1,2,1003 3.0 4.0
 		Augmentables.Push(Values);
 	}
-}
-
-void UPointCloudRenderingComponent::StartAugmentation()
-{
-	for (TArray<FString> x : Augmentables) {
-		AugmentablesQueue.Enqueue(x);
-	}
-	AugmentationInProgress = true;
 }
 #pragma endregion
 

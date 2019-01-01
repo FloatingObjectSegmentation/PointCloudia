@@ -39,15 +39,6 @@ public:
 
 public:
 	UFUNCTION(BlueprintCallable)
-		void TransformX(int32 way);
-
-	UFUNCTION(BlueprintCallable)
-		void TransformY(int32 way);
-
-	UFUNCTION(BlueprintCallable)
-		void TransformYaw(int32 way);
-
-	UFUNCTION(BlueprintCallable)
 		void StartScanning(FVector airplaneLocation, FRotator airplaneOrientation, FVector objectLocation, EAugmentationObject object);
 
 public:
