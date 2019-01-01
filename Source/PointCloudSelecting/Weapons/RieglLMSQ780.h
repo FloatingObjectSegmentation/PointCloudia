@@ -48,6 +48,10 @@ public:
 	int PhiMaxDegrees = 30; // [deg]
 	float MaxDistanceTraveled = 50.0f; // [m]
 
+									   // storage
+	TArray<FVector> Points;
+	TArray<float> Intensities;
+
 private:
 
 	// parameters
@@ -61,9 +65,5 @@ private:
 	FVector Direction;
 	FVector DirectionIntermediate;
 	FVector CurrentPoint;
-
-	// storage
-	TArray<FVector> Points;
-	TArray<float> Intensities;
 
 };

@@ -54,6 +54,7 @@ void UPointCloudRenderingComponent::TickComponent(float DeltaTime, ELevelTick Ti
 		}
 	}
 
+	// AUGMENTATION ASYNCHRONOUS MECHANISM - EVERY 500 FRAMES THE NEXT ONE GETS SPAWNED
 	if (AugmentationInProgress) {
 		if (time % 500 != 0) return;
 		if (!AugmentablesQueue.IsEmpty()) {
@@ -68,6 +69,23 @@ void UPointCloudRenderingComponent::TickComponent(float DeltaTime, ELevelTick Ti
 			// RIGHT NOW IT WILL ONLY WAIT FOR 500 FRAMES WHICH IS NOT ENOUGH!!!!!!!!
 			UE_LOG(LogTemp, Warning, TEXT("FINISHING AUGMENTATION"));
 			AugmentationInProgress = false;
+
+			TArray<UAugmentationMachineComponent*> Components;
+			GetOwner()->GetComponents<UAugmentationMachineComponent>(Components);
+			for (int32 i = 0; i < Components.Num(); i++) {
+				UAugmentationMachineComponent* Current = Components[i];
+				TArray<URieglLMSQ780 *> Scanners;
+				Current->Airplane->GetComponents<URieglLMSQ780>(Scanners);
+				URieglLMSQ780* Scanner = Scanners[0];
+
+				TArray<FVector> Points = Scanner->Points;
+				for (int i = 0; i < Points.Num(); i++) {
+					LoadedPoints.Add(FPointCloudPoint(Points[i].X, Points[i].Y, Points[i].Z));
+				}
+				Scanner->GetOwner()->Destroy();
+				Current->DestroyComponent();
+			}
+			RerenderPointCloud();
 		}
 
 	}
