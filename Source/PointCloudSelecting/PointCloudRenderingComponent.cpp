@@ -25,9 +25,8 @@ void UPointCloudRenderingComponent::BeginPlay()
 	}
 
 	if (AugmentationMode == EAugmentationMode::Augmentation) {
-		UE_LOG(LogTemp, Warning, TEXT("STARTING AUGMENTATION"));
+		UE_LOG(LogTemp, Warning, TEXT("LOADING AUGMENTATABLES"));
 		LoadAugmentables();
-		StartAugmentation();
 	}
 
 	RerenderPointCloud();
@@ -231,6 +230,7 @@ FString UPointCloudRenderingComponent::GetDatasetPath() {
 }
 void UPointCloudRenderingComponent::StartAugmentation(FTransform StartingTransform)
 {
+	UE_LOG(LogTemp, Warning, TEXT("STARTING AUGMENTATION"));
 	AugmentationStartingTransform = StartingTransform;
 	for (TArray<FString> x : Augmentables) {
 		AugmentablesQueue.Enqueue(x);
@@ -448,7 +448,7 @@ void UPointCloudRenderingComponent::Augment(TArray<FString> Augmentable)
 
 
 	// rotation should be the correct one set at the start of the program
-	comp->StartScanning(airplane_pos, GetOwner()->GetActorRotation(), position, EAugmentationObject::Sphere);
+	comp->StartScanning(airplane_pos, AugmentationStartingTransform.Rotator(), position, EAugmentationObject::Sphere);
 
 }
 

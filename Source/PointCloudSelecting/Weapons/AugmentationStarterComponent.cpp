@@ -38,7 +38,7 @@ void UAugmentationStarterComponent::TickComponent(float DeltaTime, ELevelTick Ti
 void UAugmentationStarterComponent::TransformYaw(int32 way)
 {
 	if (way == 0) return;
-	GetOwner()->SetActorRotation(GetOwner()->GetActorRotation() + FRotator(0, 0.3 * way, 0));
+	GetOwner()->SetActorRotation(GetOwner()->GetActorRotation() + FRotator(0, 5 * way, 0));
 }
 
 void UAugmentationStarterComponent::StartAugmentation() 

@@ -137,7 +137,7 @@ void UAugmentationMachineComponent::SetBoundingBoxAttributes()
 		StaticMeshComponent->SetMobility(EComponentMobility::Movable);
 		StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		StaticMeshComponent->SetStaticMesh(AirplaneStaticMesh);
-		StaticMeshComponent->SetWorldRotation(FQuat::MakeFromEuler(FVector(90, 0, 0)));
+		//StaticMeshComponent->SetWorldRotation(FQuat::MakeFromEuler(FVector(90, 0, 0)));
 
 
 		// set the target material
