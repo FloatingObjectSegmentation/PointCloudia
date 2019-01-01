@@ -154,6 +154,7 @@ void UAugmentationMachineComponent::SpawnObject(FVector Location, FRotator Orien
 
 	UClass* param = AStaticMeshActor::StaticClass();
 	AActor* spawned = GetWorld()->SpawnActor(param, &SpawningTransform, FActorSpawnParameters());
+	AugmentedObject = spawned;
 	SetAugmentedObjectAttributes(*spawned, type);
 }
 

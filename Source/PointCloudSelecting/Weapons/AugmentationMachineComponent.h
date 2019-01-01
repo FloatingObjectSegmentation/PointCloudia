@@ -46,6 +46,7 @@ public:
 	float SpawnDistance = 200.0f;
 	AActor* Airplane;
 	URieglLMSQ780* ScannerComponent;
+	AActor* AugmentedObject;
 
 	// the augmentable objects
 	UStaticMesh * SphereStaticMesh;

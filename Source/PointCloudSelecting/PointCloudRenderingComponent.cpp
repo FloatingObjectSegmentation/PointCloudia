@@ -82,7 +82,10 @@ void UPointCloudRenderingComponent::TickComponent(float DeltaTime, ELevelTick Ti
 				for (int i = 0; i < Points.Num(); i++) {
 					LoadedPoints.Add(FPointCloudPoint(Points[i].X, Points[i].Y, Points[i].Z));
 				}
+				// Also save the augmented objects into a data structure
+
 				Scanner->GetOwner()->Destroy();
+				Current->AugmentedObject->Destroy();
 				Current->DestroyComponent();
 			}
 			RerenderPointCloud();
