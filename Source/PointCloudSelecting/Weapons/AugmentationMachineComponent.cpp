@@ -36,8 +36,11 @@ void UAugmentationMachineComponent::TickComponent(float DeltaTime, ELevelTick Ti
 #pragma endregion
 
 #pragma region [API]
-void UAugmentationMachineComponent::StartScanning(FVector airplaneLocation, FRotator airplaneOrientation, FVector objectLocation, EAugmentationObject object)
+void UAugmentationMachineComponent::StartScanning(FVector airplaneLocation, FRotator airplaneOrientation, FVector objectLocation, EAugmentationObject object, float minRbnnR)
 {
+	ObjectType = object;
+	MinRbnnR = minRbnnR;
+
 	Airplane = SpawnAirplane(airplaneLocation, airplaneOrientation);
 	SpawnObject(objectLocation, airplaneOrientation, object);
 

@@ -88,6 +88,7 @@ private:
 	FString FloatingObjectFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\result459_99.pcd");
 	FString ClassColorsFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\colormap.txt");
 	FString AugmentablesFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\augmentables_test.txt");
+	FString AugmentedFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\augmented.txt");
 	#pragma endregion
 
 	#pragma region [locals]
@@ -144,6 +145,8 @@ protected:
 public:	
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	FString StoreAugmentedSamples();
+
 public: // API
 
 	UFUNCTION(BlueprintCallable)
@@ -180,6 +183,7 @@ protected: // auxiliary
 	void LoadAugmentables();
 
 	void Augment(TArray<FString> Augmentable);
+	FString AugmentedExampleDescriptionToString(EAugmentationObject objectType, float minrbnnr, TArray<FVector> &Points, URieglLMSQ780 * Scanner);
 
 	void RerenderPointCloud();
 

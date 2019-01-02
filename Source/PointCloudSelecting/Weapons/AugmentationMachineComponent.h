@@ -39,7 +39,7 @@ public:
 
 public:
 	UFUNCTION(BlueprintCallable)
-		void StartScanning(FVector airplaneLocation, FRotator airplaneOrientation, FVector objectLocation, EAugmentationObject object);
+		void StartScanning(FVector airplaneLocation, FRotator airplaneOrientation, FVector objectLocation, EAugmentationObject object, float minRbnnR);
 
 public:
 	UStaticMesh * AirplaneStaticMesh;
@@ -50,6 +50,9 @@ public:
 
 	// the augmentable objects
 	UStaticMesh * SphereStaticMesh;
+
+	float MinRbnnR;
+	EAugmentationObject ObjectType;
 
 private:
 	void LoadAirplaneStaticMesh();

@@ -67,32 +67,51 @@ void UPointCloudRenderingComponent::TickComponent(float DeltaTime, ELevelTick Ti
 			// !!!!!!!!!!!!!!!!!!!!!
 			// WARNING THIS IS NOT CORRECT. WE SHOULD RATHER WAIT ABOUT A MINUTE TO BE SURE THAT THE LAST AUGMENTATION IS COMPLETE.
 			// RIGHT NOW IT WILL ONLY WAIT FOR 500 FRAMES WHICH IS NOT ENOUGH!!!!!!!!
-			UE_LOG(LogTemp, Warning, TEXT("FINISHING AUGMENTATION"));
-			AugmentationInProgress = false;
-
-			TArray<UAugmentationMachineComponent*> Components;
-			GetOwner()->GetComponents<UAugmentationMachineComponent>(Components);
-			for (int32 i = 0; i < Components.Num(); i++) {
-				UAugmentationMachineComponent* Current = Components[i];
-				TArray<URieglLMSQ780 *> Scanners;
-				Current->Airplane->GetComponents<URieglLMSQ780>(Scanners);
-				URieglLMSQ780* Scanner = Scanners[0];
-
-				TArray<FVector> Points = Scanner->Points;
-				for (int i = 0; i < Points.Num(); i++) {
-					LoadedPoints.Add(FPointCloudPoint(Points[i].X, Points[i].Y, Points[i].Z));
-				}
-				// Also save the augmented objects into a data structure
-
-				Scanner->GetOwner()->Destroy();
-				Current->AugmentedObject->Destroy();
-				Current->DestroyComponent();
-			}
+			StoreAugmentedSamples();
 			RerenderPointCloud();
 		}
 
 	}
 
+}
+FString UPointCloudRenderingComponent::StoreAugmentedSamples()
+{
+	UE_LOG(LogTemp, Warning, TEXT("FINISHING AUGMENTATION"));
+	AugmentationInProgress = false;
+
+	TArray<UAugmentationMachineComponent*> Components;
+	GetOwner()->GetComponents<UAugmentationMachineComponent>(Components);
+
+
+	// extract data from the augmentation
+	FString Descriptions;
+	for (int32 i = 0; i < Components.Num(); i++) {
+		UAugmentationMachineComponent* Current = Components[i];
+		TArray<URieglLMSQ780 *> Scanners;
+		Current->Airplane->GetComponents<URieglLMSQ780>(Scanners);
+		URieglLMSQ780* Scanner = Scanners[0];
+
+		TArray<FVector> Points = Scanner->Points;
+		for (int32 i = 0; i < Points.Num(); i++) {
+			LoadedPoints.Add(FPointCloudPoint(Points[i].X, Points[i].Y, Points[i].Z));
+		}
+
+		//////////////////////////////////////////////////////////
+		// save the augmented points into a data structure.
+		float minrbnnr = Current->MinRbnnR;
+		EAugmentationObject objectType = Current->ObjectType;
+
+		
+		FString CurrentDescription = AugmentedExampleDescriptionToString(objectType, minrbnnr, Points, Scanner);
+
+		Descriptions += CurrentDescription + TEXT("\n");
+
+		Scanner->GetOwner()->Destroy();
+		Current->AugmentedObject->Destroy();
+		Current->DestroyComponent();
+	}
+
+	return Descriptions;
 }
 #pragma endregion
 
@@ -469,7 +488,7 @@ void UPointCloudRenderingComponent::Augment(TArray<FString> Augmentable)
 
 
 	// rotation should be the correct one set at the start of the program
-	comp->StartScanning(airplane_pos, AugmentationStartingTransform.Rotator(), position, EAugmentationObject::Sphere);
+	comp->StartScanning(airplane_pos, AugmentationStartingTransform.Rotator(), position, EAugmentationObject::Sphere, rbnn_r_min);
 
 }
 
@@ -495,6 +514,59 @@ void UPointCloudRenderingComponent::LoadAugmentables()
 		// 1 1,2,3 balloon 1,2,1003 3.0 4.0
 		Augmentables.Push(Values);
 	}
+}
+
+FString UPointCloudRenderingComponent::AugmentedExampleDescriptionToString(EAugmentationObject objectType, float minrbnnr, TArray<FVector> &Points, URieglLMSQ780 * Scanner)
+{
+	TArray<FStringFormatArg> args;
+
+	// id
+	args.Add(0);
+
+	// object type
+	FString objectTypeArgString;
+	switch (objectType) {
+	case EAugmentationObject::Sphere:
+		objectTypeArgString = "SPHERE";
+		break;
+	case EAugmentationObject::Cube:
+		objectTypeArgString = "CUBE";
+		break;
+	}
+	FStringFormatArg objectTypeArg((int32)objectType);
+	args.Add(objectTypeArg);
+
+	// min_r
+	args.Add(minrbnnr);
+
+	// positions
+	FString PointsString(TEXT(""));
+	PointsString += TEXT("[");
+	for (int32 i = 0; i < Points.Num(); i++) {
+		PointsString += Points[i].ToString();
+		if (i != Points.Num() - 1)
+			PointsString += ",";
+	}
+	PointsString += TEXT("]");
+	FStringFormatArg PointsStringArg(PointsString);
+	args.Add(PointsStringArg);
+
+	// intensities
+	TArray<float> Intensities = Scanner->Intensities;
+	FString IntensitiesString(TEXT(""));
+	IntensitiesString += TEXT("[");
+	for (int32 i = 0; i < Intensities.Num(); i++) {
+		IntensitiesString += FString::SanitizeFloat(Intensities[i]);
+		if (i != Intensities.Num() - 1)
+			IntensitiesString += ",";
+	}
+	IntensitiesString += TEXT("]");
+	FStringFormatArg IntensitiesStringArg(IntensitiesString);
+	args.Add(IntensitiesStringArg);
+
+	// id shape min_r positions intensities
+	FString CurrentAugmentedExampleDescription = FString::Format(TEXT("%d %s %.2f %s %s"), args);
+	return CurrentAugmentedExampleDescription;
 }
 #pragma endregion
 
