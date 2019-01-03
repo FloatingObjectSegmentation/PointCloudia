@@ -41,7 +41,7 @@ void UAugmentationMachineComponent::StartScanning(FVector airplaneLocation, FRot
 	ObjectType = object;
 	MinRbnnR = minRbnnR;
 
-	Airplane = SpawnAirplane(airplaneLocation, airplaneOrientation);
+	Airplane = SpawnAirplane(airplaneLocation, airplaneOrientation, objectScaleInMeters);
 	AugmentedObject = Spawner->SpawnFloatingObject(ObjectType, objectLocation, objectScaleInMeters);
 
 	URieglLMSQ780* comp = NewObject<URieglLMSQ780>(Airplane);
@@ -87,7 +87,7 @@ void UAugmentationMachineComponent::ExtractStaticMeshFromActor(TArray<AActor *> 
 #pragma endregion
 
 #pragma region [spawning airplane]
-AActor* UAugmentationMachineComponent::SpawnAirplane(FVector Location, FRotator Orientation)
+AActor* UAugmentationMachineComponent::SpawnAirplane(FVector Location, FRotator Orientation, FVector Scale)
 {
 	FTransform SpawningTransform(Orientation, Location);
 	//GetBoundingBoxSpawnTransform(OUT SpawningTransform);
@@ -95,18 +95,8 @@ AActor* UAugmentationMachineComponent::SpawnAirplane(FVector Location, FRotator 
 	UClass* param = AStaticMeshActor::StaticClass();
 	Airplane = GetWorld()->SpawnActor(param, &SpawningTransform, FActorSpawnParameters());
 	SetAirplaneAttributes();
+	Airplane->SetActorLocation(Airplane->GetActorLocation() - Airplane->GetActorForwardVector() * 0.15 * FMath::Max3(Scale.X, Scale.Y, Scale.Z));
 	return Airplane;
-}
-
-void UAugmentationMachineComponent::GetAirplaneSpawnTransform(FTransform &SpawningTransform)
-{
-	FVector SpawningLocation;
-	FVector PlayerViewPointLocation;
-	FRotator Rotation;
-	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(OUT PlayerViewPointLocation, OUT Rotation); // OUT does nothing, but it allows us to mark out params!
-	FVector RotAsVector = Rotation.Vector();
-	SpawningLocation = GetOwner()->GetActorLocation() + SpawnDistance * RotAsVector;
-	SpawningTransform.SetLocation(SpawningLocation);
 }
 
 void UAugmentationMachineComponent::SetAirplaneAttributes()

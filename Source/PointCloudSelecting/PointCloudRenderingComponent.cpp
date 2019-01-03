@@ -487,7 +487,7 @@ void UPointCloudRenderingComponent::Augment(TArray<FString> Augmentable)
 	}
 
 	Values.Empty();
-	Augmentable[4].ParseIntoArray(Values, TEXT(","));
+    Augmentable[4].ParseIntoArray(Values, TEXT(","));
 	FVector airplane_pos = FVector(FCString::Atof(*Values[0]), FCString::Atof(*Values[1]), FCString::Atof(*Values[2]));
 
 	float rbnn_r_min = FCString::Atof(*Augmentable[5]);

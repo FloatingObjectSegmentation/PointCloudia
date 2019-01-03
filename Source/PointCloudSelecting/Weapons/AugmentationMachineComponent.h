@@ -60,8 +60,7 @@ private:
 	void LoadAirplaneStaticMesh();
 	void FindAirplaneMesh(TArray<AActor *> &FoundActors);
 	void ExtractStaticMeshFromActor(TArray<AActor *> & FoundActors, const int32 &i);
-	AActor* SpawnAirplane(FVector Location, FRotator Orientation);
-	void GetAirplaneSpawnTransform(FTransform &SpawningTransform);
+	AActor* SpawnAirplane(FVector Location, FRotator Orientation, FVector Scale);
 	void SetAirplaneAttributes();
 
 
