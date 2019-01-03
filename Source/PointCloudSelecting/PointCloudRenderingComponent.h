@@ -2,23 +2,21 @@
 
 #pragma once
 
+// CPP IMPORTS
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <sstream>
 #include "Rpc.h"
 
+// UNREAL IMPORTS
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "PointCloud.h"
 #include "Runtime/Core/Public/Misc/FileHelper.h"
 #include "Runtime/Core/Public/Misc/Guid.h"
 #include "Runtime/Core/Public/Containers/UnrealString.h"
 #include "Runtime/Core/Public/Misc/StringFormatArg.h"
-#include "PointCloudHelper.h"
-#include "PointCloudActor.h"
 #include "Engine/World.h"
-#include "Weapons/AugmentationMachineComponent.h"
 #include "Runtime/Core/Public/HAL/PlatformFilemanager.h"
 #include "Runtime/Core/Public/Misc/Paths.h"
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
@@ -27,7 +25,18 @@
 #include "Engine/StaticMeshActor.h"
 #include "Components/StaticMeshComponent.h"
 #include "Runtime/Engine/Classes/Materials/MaterialInstanceDynamic.h"
+
+// EXTERNAL IMPORTS
+#include "PointCloudHelper.h"
+#include "PointCloudActor.h"
+#include "PointCloud.h"
+
+// PROJECT IMPORTS
+#include "Weapons/AugmentationMachineComponent.h"
+#include "FloatingObject.h"
+
 #include "PointCloudRenderingComponent.generated.h"
+
 
 
 UENUM(BlueprintType)		//"BlueprintType" is essential to include

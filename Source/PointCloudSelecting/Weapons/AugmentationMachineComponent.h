@@ -2,6 +2,7 @@
 
 #pragma once
 
+// UNREAL IMPORTS
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -10,15 +11,14 @@
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
-#include "RieglLMSQ780.h"
-#include "AugmentationMachineComponent.generated.h"
 
-UENUM(BlueprintType)
-enum class EAugmentationObject : uint8
-{
-	Sphere						UMETA(DisplayName = "Sphere"),
-	Cube						UMETA(DisplayName = "Cube")
-};
+// PROJECT IMPORTS
+#include "RieglLMSQ780.h"
+#include "../FloatingObject.h"
+#include "../FloatingObjectSpawner.h"
+
+// MANDATORY IMPORT
+#include "AugmentationMachineComponent.generated.h"
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class POINTCLOUDSELECTING_API UAugmentationMachineComponent : public UActorComponent
@@ -33,13 +33,15 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
+	void FindFloatingObjectSpawnerInWorld();
+
 public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
 	UFUNCTION(BlueprintCallable)
-		void StartScanning(FVector airplaneLocation, FRotator airplaneOrientation, FVector objectLocation, EAugmentationObject object, float minRbnnR);
+		void StartScanning(FVector airplaneLocation, FRotator airplaneOrientation, FVector objectLocation, FVector objectScaleInMeters, EAugmentationObject object, float minRbnnR);
 
 public:
 	UStaticMesh * AirplaneStaticMesh;
@@ -49,21 +51,18 @@ public:
 	AActor* AugmentedObject;
 
 	// the augmentable objects
-	UStaticMesh * SphereStaticMesh;
+	AFloatingObjectSpawner* Spawner;
 
 	float MinRbnnR;
 	EAugmentationObject ObjectType;
 
 private:
 	void LoadAirplaneStaticMesh();
-	void LoadAugmentableMeshes();
-	void FindTemplateMesh(TArray<AActor *> &FoundActors);
+	void FindAirplaneMesh(TArray<AActor *> &FoundActors);
 	void ExtractStaticMeshFromActor(TArray<AActor *> & FoundActors, const int32 &i);
 	AActor* SpawnAirplane(FVector Location, FRotator Orientation);
-	void SpawnObject(FVector Location, FRotator Orientation, EAugmentationObject type);
-	void SetAugmentedObjectAttributes(AActor& object, EAugmentationObject type);
-	void GetBoundingBoxSpawnTransform(FTransform &SpawningTransform);
-	void SetBoundingBoxAttributes();
+	void GetAirplaneSpawnTransform(FTransform &SpawningTransform);
+	void SetAirplaneAttributes();
 
 
 };

@@ -470,15 +470,29 @@ void UPointCloudRenderingComponent::Augment(TArray<FString> Augmentable)
 	Augmentable[1].ParseIntoArray(Values, TEXT(","));
 	FVector position = FVector(FCString::Atof(*Values[0]), FCString::Atof(*Values[1]), FCString::Atof(*Values[2]));
 
-	FString shape = Augmentable[2];
+	Values.Empty();
+	Augmentable[2].ParseIntoArray(Values, TEXT(","));
+	FVector scale = FVector(FCString::Atof(*Values[0]), FCString::Atof(*Values[1]), FCString::Atof(*Values[2]));
+
+	FString shape = Augmentable[3];
+	EAugmentationObject objectType;
+	if (shape == TEXT("BALLOON")) {
+		objectType = EAugmentationObject::Balloon;
+	}
+	else if (shape == TEXT("AIRPLANE")) {
+		objectType = EAugmentationObject::Airplane;
+	}
+	else if (shape == TEXT("BIRD")) {
+		objectType = EAugmentationObject::Bird;
+	}
 
 	Values.Empty();
-	Augmentable[3].ParseIntoArray(Values, TEXT(","));
+	Augmentable[4].ParseIntoArray(Values, TEXT(","));
 	FVector airplane_pos = FVector(FCString::Atof(*Values[0]), FCString::Atof(*Values[1]), FCString::Atof(*Values[2]));
 
-	float rbnn_r_min = FCString::Atof(*Augmentable[4]);
+	float rbnn_r_min = FCString::Atof(*Augmentable[5]);
 
-	float rbnn_r_max = FCString::Atof(*Augmentable[5]);
+	float rbnn_r_max = FCString::Atof(*Augmentable[6]);
 
 	UAugmentationMachineComponent* comp = NewObject<UAugmentationMachineComponent>(GetOwner());
 	comp->RegisterComponent();
@@ -487,7 +501,7 @@ void UPointCloudRenderingComponent::Augment(TArray<FString> Augmentable)
 
 
 	// rotation should be the correct one set at the start of the program
-	comp->StartScanning(airplane_pos, AugmentationStartingTransform.Rotator(), position, EAugmentationObject::Sphere, rbnn_r_min);
+	comp->StartScanning(airplane_pos, AugmentationStartingTransform.Rotator(), position, scale, objectType, rbnn_r_min);
 
 }
 
@@ -509,8 +523,8 @@ void UPointCloudRenderingComponent::LoadAugmentables()
 
 		// Bad practice pushing only an array of strings, need to make structs eventually
 		// files are ordered:
-		// [id (int)] [position (vec3)] [shape (string)] [airplane_pos (vec3)] [rbnn_r_min (float)] [rbnn_r_max (float)]
-		// 1 1,2,3 balloon 1,2,1003 3.0 4.0
+		// [id (int)] [position (vec3)] [scale in meters (vec3)] [shape (string)] [airplane_pos (vec3)] [rbnn_r_min (float)] [rbnn_r_max (float)]
+		// 1 1,2,3 10,10,12 balloon 1,2,1003 3.0 4.0
 		Augmentables.Push(Values);
 	}
 }

@@ -6,6 +6,16 @@
 #include "GameFramework/Actor.h"
 #include "FloatingObject.generated.h"
 
+UENUM(BlueprintType)
+enum class EAugmentationObject : uint8
+{
+	Sphere						UMETA(DisplayName = "Sphere"),
+	Cube						UMETA(DisplayName = "Cube"),
+	Bird						UMETA(DisplayName = "Bird"),
+	Airplane					UMETA(DisplayName = "Airplane"),
+	Balloon						UMETA(DisplayName = "Balloon")
+};
+
 UCLASS()
 class POINTCLOUDSELECTING_API AFloatingObject : public AActor
 {
