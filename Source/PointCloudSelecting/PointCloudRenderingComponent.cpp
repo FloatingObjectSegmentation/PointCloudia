@@ -70,7 +70,6 @@ void UPointCloudRenderingComponent::TickComponent(float DeltaTime, ELevelTick Ti
 			StoreAugmentedSamples();
 			RerenderPointCloud();
 		}
-
 	}
 
 }
