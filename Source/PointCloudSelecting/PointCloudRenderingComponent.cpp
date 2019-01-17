@@ -18,7 +18,7 @@ void UPointCloudRenderingComponent::BeginPlay()
 	LoadAndPreparePoints();
 
 	if (UseFancyFeatures) {
-		LoadRbnnResults();
+		//LoadRbnnResults();
 		LoadClassifications();
 		LoadIntensities();
 		LoadDesiredClassColors();
@@ -469,10 +469,12 @@ void UPointCloudRenderingComponent::Augment(TArray<FString> Augmentable)
 	TArray<FString> Values;
 	Augmentable[1].ParseIntoArray(Values, TEXT(","));
 	FVector position = FVector(FCString::Atof(*Values[0]), FCString::Atof(*Values[1]), FCString::Atof(*Values[2]));
+	SpaceTransformPCToLocal(position);
 
 	Values.Empty();
 	Augmentable[2].ParseIntoArray(Values, TEXT(","));
 	FVector scale = FVector(FCString::Atof(*Values[0]), FCString::Atof(*Values[1]), FCString::Atof(*Values[2]));
+	scale = FVector(30.0f, 30.0f, 30.0f);
 
 	FString shape = Augmentable[3];
 	EAugmentationObject objectType;
@@ -489,10 +491,9 @@ void UPointCloudRenderingComponent::Augment(TArray<FString> Augmentable)
 	Values.Empty();
     Augmentable[4].ParseIntoArray(Values, TEXT(","));
 	FVector airplane_pos = FVector(FCString::Atof(*Values[0]), FCString::Atof(*Values[1]), FCString::Atof(*Values[2]));
+	SpaceTransformPCToLocal(airplane_pos);
 
 	float rbnn_r_min = FCString::Atof(*Augmentable[5]);
-
-	float rbnn_r_max = FCString::Atof(*Augmentable[6]);
 
 	UAugmentationMachineComponent* comp = NewObject<UAugmentationMachineComponent>(GetOwner());
 	comp->RegisterComponent();
@@ -501,7 +502,8 @@ void UPointCloudRenderingComponent::Augment(TArray<FString> Augmentable)
 
 
 	// rotation should be the correct one set at the start of the program
-	comp->StartScanning(airplane_pos, AugmentationStartingTransform.Rotator(), position, scale, objectType, rbnn_r_min);
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, FString::Printf(TEXT("Scanning position: %.2f,%.2f,%.2f; rbnn_minval: %.2f"), position.X, position.Y, position.Z, rbnn_r_min));
+	comp->StartScanning(airplane_pos + FVector(0.0f, 0.0f, 500.0f), AugmentationStartingTransform.Rotator(), position, scale, objectType, rbnn_r_min);
 
 }
 
@@ -706,7 +708,12 @@ void UPointCloudRenderingComponent::SpaceTransformPCToLocal(TArray<FPointCloudPo
 		LoadedPoints[i].Location.Y -= MinY;
 		LoadedPoints[i].Location.Z -= MinZ;
 	}
-
+}
+void UPointCloudRenderingComponent::SpaceTransformPCToLocal(FVector& vec)
+{
+	vec.X = MaxX - vec.X;
+	vec.Y -= MinY;
+	vec.Z -= MinZ;
 }
 #pragma endregion
 

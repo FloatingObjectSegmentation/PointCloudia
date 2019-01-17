@@ -80,8 +80,8 @@ class POINTCLOUDSELECTING_API UPointCloudRenderingComponent : public UActorCompo
 	GENERATED_BODY()
 
 public:
-	EFilterModeEnum FilterMode = EFilterModeEnum::FilterNonFloating;
-	EFloatingSegmentColorMode FloatingSegmentColorMode = EFloatingSegmentColorMode::Mixed;
+	EFilterModeEnum FilterMode = EFilterModeEnum::None;
+	EFloatingSegmentColorMode FloatingSegmentColorMode = EFloatingSegmentColorMode::None;
 	EAugmentationMode AugmentationMode = EAugmentationMode::Augmentation;
 
 private:
@@ -91,12 +91,12 @@ private:
 	bool UseFancyFeatures = true;
 	bool AugmentationInProgress = false;
 
-	FString PointCloudFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_99.txt");
-	FString PointCloudClassFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_99class.txt");
-	FString PointCloudIntensityFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\459_99intensity.txt");
+	FString PointCloudFile = TEXT("C:\\Users\\km\\Desktop\\LIDAR_WORKSPACE\\lidar\\449_121.txt");
+	FString PointCloudClassFile = TEXT("C:\\Users\\km\\Desktop\\LIDAR_WORKSPACE\\lidar\\449_121class.txt");
+	FString PointCloudIntensityFile = TEXT("C:\\Users\\km\\Desktop\\LIDAR_WORKSPACE\\lidar\\449_121intensity.txt");
 	FString FloatingObjectFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\result459_99.pcd");
 	FString ClassColorsFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\colormap.txt");
-	FString AugmentablesFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\augmentables_test.txt");
+	FString AugmentablesFile = TEXT("C:\\Users\\km\\Desktop\\LIDAR_WORKSPACE\\augmentation\\reskurac.txt");
 	FString AugmentedFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\augmented.txt");
 	#pragma endregion
 
@@ -217,6 +217,7 @@ protected: // auxiliary
 	
 	void RecomputeSelectedRbnnClusterParameters();
 	void SpaceTransformPCToLocal(TArray<FPointCloudPoint> &LoadedPoints);
+	void SpaceTransformPCToLocal(FVector& vec);
 	UPointCloud * PrepareRenderingSettings(TArray<FPointCloudPoint> &Points, FString pointCloudName, FString settingsName);
 	void SpawnPointCloudHostActor(FTransform const &SpawningTransform);
 	void GetPointCloudPoints(TArray<FPointCloudPoint> &LoadedPoints);
