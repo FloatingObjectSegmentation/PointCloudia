@@ -18,7 +18,7 @@ void UPointCloudRenderingComponent::BeginPlay()
 	LoadAndPreparePoints();
 
 	if (UseFancyFeatures) {
-		//LoadRbnnResults();
+		LoadRbnnResults();
 		LoadClassifications();
 		LoadIntensities();
 		LoadDesiredClassColors();

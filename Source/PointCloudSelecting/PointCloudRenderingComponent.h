@@ -91,13 +91,21 @@ private:
 	bool UseFancyFeatures = true;
 	bool AugmentationInProgress = false;
 
-	FString PointCloudFile = TEXT("C:\\Users\\km\\Desktop\\LIDAR_WORKSPACE\\lidar\\449_121.txt");
-	FString PointCloudClassFile = TEXT("C:\\Users\\km\\Desktop\\LIDAR_WORKSPACE\\lidar\\449_121class.txt");
+	/*FString PointCloudFile = TEXT("E:\workspaces\LIDAR_WORKSPACE\dmr\449_121");
+	FString PointCloudClassFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\lidar\\449_121class.txt");
 	FString PointCloudIntensityFile = TEXT("C:\\Users\\km\\Desktop\\LIDAR_WORKSPACE\\lidar\\449_121intensity.txt");
-	FString FloatingObjectFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\result459_99.pcd");
+	FString FloatingObjectFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\lidar\\rbnnresult449_121.pcd");
 	FString ClassColorsFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\colormap.txt");
-	FString AugmentablesFile = TEXT("C:\\Users\\km\\Desktop\\LIDAR_WORKSPACE\\augmentation\\reskurac.txt");
-	FString AugmentedFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\augmented.txt");
+	FString AugmentablesFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\augmentation\\augmentation_resultend.txt");
+	FString AugmentedFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\augmentation\\augmented.txt");*/
+
+	FString PointCloudFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\dmr\\449_121rm");
+	FString PointCloudClassFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\dmr\\449_121class");
+	FString PointCloudIntensityFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\dmr\\449_121intensity");
+	FString FloatingObjectFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\dmr\\449_121rbnn");
+	FString ClassColorsFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\colormap.txt");
+	FString AugmentablesFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\augmentation\\augmentation_resultend.txt");
+	FString AugmentedFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\augmentation\\augmented.txt");
 	#pragma endregion
 
 	#pragma region [locals]
