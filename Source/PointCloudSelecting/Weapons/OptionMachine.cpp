@@ -108,12 +108,17 @@ FString UOptionMachine::LabelCurrentObject(EFloatingObjectLabel Label)
 
 FString UOptionMachine::GetDatasetDirectory() {
 	FString path = PointCloudRenderingComponent->GetDatasetPath();
-	FString name = GetDatasetName();
+	FString name = GetDatasetFilename();
 	path.Find(name);
 	return path.Left(path.Len() - name.Len());
 }
 
 FString UOptionMachine::GetDatasetName() {
+	FString path = PointCloudRenderingComponent->GetDatasetPath();
+	return FPaths::GetBaseFilename(path);
+}
+
+FString UOptionMachine::GetDatasetFilename() {
 	FString path = PointCloudRenderingComponent->GetDatasetPath();
 	return FPaths::GetCleanFilename(path);
 }

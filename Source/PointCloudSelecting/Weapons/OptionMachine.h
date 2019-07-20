@@ -58,6 +58,9 @@ public:
 		FString GetDatasetName();
 
 	UFUNCTION(BlueprintCallable)
+		FString GetDatasetFilename();
+
+	UFUNCTION(BlueprintCallable)
 		FString GetLabelsFolderPath();
 
 private:
