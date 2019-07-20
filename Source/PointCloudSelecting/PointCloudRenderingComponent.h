@@ -91,21 +91,22 @@ private:
 	bool UseFancyFeatures = true;
 	bool AugmentationInProgress = false;
 
-	/*FString PointCloudFile = TEXT("E:\workspaces\LIDAR_WORKSPACE\dmr\449_121");
+	FString PointCloudFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\lidar\\449_121.txt");
 	FString PointCloudClassFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\lidar\\449_121class.txt");
-	FString PointCloudIntensityFile = TEXT("C:\\Users\\km\\Desktop\\LIDAR_WORKSPACE\\lidar\\449_121intensity.txt");
+	FString PointCloudIntensityFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\lidar\\449_121intensity.txt");
 	FString FloatingObjectFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\lidar\\rbnnresult449_121.pcd");
+	FString ClassColorsFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\point_cloudia\\colormap.txt");
+	FString AugmentablesFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\augmentation\\augmentation_resultend.txt");
+	FString AugmentedFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\augmentation\\augmented.txt");
+
+	/*FString PointCloudFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\tests\\dmr_augs_merge_test\\result.txt");
+	FString PointCloudClassFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\tests\\dmr_augs_merge_test\\resultclass.txt");
+	FString PointCloudIntensityFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\tests\\dmr_augs_merge_test\\resultintensity.txt");
+	FString FloatingObjectFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\tests\\dmr_augs_merge_test\\resultrbnn.txt");
+
 	FString ClassColorsFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\colormap.txt");
 	FString AugmentablesFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\augmentation\\augmentation_resultend.txt");
 	FString AugmentedFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\augmentation\\augmented.txt");*/
-
-	FString PointCloudFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\dmr\\449_121rm");
-	FString PointCloudClassFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\dmr\\449_121class");
-	FString PointCloudIntensityFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\dmr\\449_121intensity");
-	FString FloatingObjectFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\dmr\\449_121rbnn");
-	FString ClassColorsFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\colormap.txt");
-	FString AugmentablesFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\augmentation\\augmentation_resultend.txt");
-	FString AugmentedFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\augmentation\\augmented.txt");
 	#pragma endregion
 
 	#pragma region [locals]

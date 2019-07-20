@@ -22,21 +22,46 @@ For now, the program is primarily meant to be used with LiDAR point clouds.
 
 ### Prepare
 
-1. Prepare your LAS point cloud
+#### Prepare your LAS point cloud
     - Download and set up the ```LazPreprocessor``` repository in the ```FloatingObjectSegmentation``` organization.
     - Follow the instructions given in the readme of the repository to acquire all files needed for visualizing.
-2. Configure ```PointCloudRenderingComponent.h``` to use the above files for the point cloud file, class file and floating object segment file.
+#### Configure 
+- ```PointCloudRenderingComponent.h``` to use the above files for the point cloud file, class file and floating object segment file.
 
-### Usage
+### Controls
 
-- **Right mouse click**: Spawns a new selection box.
-- **Left mouse click**: If a selection box is spawned, then this will finish the selection and export the file.
 - **WASDQE**: move your pawn around.
+
+#### Selection box
+- **Left mouse click**: Spawns a new selection box. If a selection box is spawned, then this will finish the selection and export the file.
 - **UIOJKL**: move the selection box around.
 - **1**: Switch to translation mode.
 - **2**: Switch to rotation mode.
 - **3**: Switch to scaling mode.
 
+#### Labeling
+- **V**: move to next candidate
+- **6**: Label current candidate floating
+- **7**: Label current candidate likely floating
+- **8**: Label current candidate maybe floating
+- **9**: Label current candidate not floating
+
+#### View mode
+- **B**: Change color mode
+- **N**: Change filter mode
+- **M**: Change currently viewed RBNN value
+
+#### Augmentation controls
+Above you is a pointer that represents the direction of the airplane. It determines which way the plane is flying while scanning the augmentables with the RIEGL scanner.
+- **U** - rotate airplane by yaw left
+- **O** - rotate airplane by yaw right
+- **SPACE BAR** - start the augmentation
+
+### Outputs
+
+#### Label files
+
+#### Augmentation files
 
 ### Programming trace
 Idea and program, dependency trace is on this [link](https://docs.google.com/document/d/1yHzkerjFujqTkWjpkrrbrEc0v5QezEtqUxGGcvH7Hhw/edit?usp=sharing)
