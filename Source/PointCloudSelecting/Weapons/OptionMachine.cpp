@@ -115,7 +115,7 @@ FString UOptionMachine::GetDatasetDirectory() {
 
 FString UOptionMachine::GetDatasetName() {
 	FString path = PointCloudRenderingComponent->GetDatasetPath();
-	return FPaths::GetBaseFilename(path);
+	return FPaths::GetCleanFilename(path);
 }
 
 FString UOptionMachine::GetLabelsFolderPath() {

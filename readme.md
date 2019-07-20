@@ -45,7 +45,7 @@ For now, the program is primarily meant to be used with LiDAR point clouds.
 - **7**: Label current candidate likely floating
 - **8**: Label current candidate maybe floating
 - **9**: Label current candidate not floating
-
+n
 #### View mode
 - **B**: Change color mode
 - **N**: Change filter mode
@@ -61,6 +61,13 @@ Above you is a pointer that represents the direction of the airplane. It determi
 
 #### Label files
 
+- save format
+
+```
+[label]\n
+[RBNN radius]\n
+[\n separated indices of points in original cloud]
+```
 #### Augmentation files
 
 ### Programming trace
