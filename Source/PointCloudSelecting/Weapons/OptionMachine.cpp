@@ -108,7 +108,7 @@ FString UOptionMachine::LabelCurrentObject(EFloatingObjectLabel Label)
 
 FString UOptionMachine::GetDatasetDirectory() {
 	FString path = PointCloudRenderingComponent->GetDatasetPath();
-	FString name = GetDatasetName();
+	FString name = GetDatasetFilename();
 	path.Find(name);
 	return path.Left(path.Len() - name.Len());
 }
@@ -118,12 +118,20 @@ FString UOptionMachine::GetDatasetName() {
 	return FPaths::GetBaseFilename(path);
 }
 
+FString UOptionMachine::GetDatasetFilename() {
+	FString path = PointCloudRenderingComponent->GetDatasetPath();
+	return FPaths::GetCleanFilename(path);
+}
+
 FString UOptionMachine::GetLabelsFolderPath() {
 	FString datasetPath = GetDatasetDirectory();
 	FString path = FPaths::Combine(datasetPath, TEXT("labels"));
 	return path;
 }
 
+FString UOptionMachine::GetFinalAugmentations() {
+	return PointCloudRenderingComponent->GetAugmentationFinalResultString();
+}
 #pragma endregion
 
 

@@ -58,7 +58,13 @@ public:
 		FString GetDatasetName();
 
 	UFUNCTION(BlueprintCallable)
+		FString GetDatasetFilename();
+
+	UFUNCTION(BlueprintCallable)
 		FString GetLabelsFolderPath();
+
+	UFUNCTION(BlueprintCallable)
+		FString GetFinalAugmentations();
 
 private:
 	UPointCloudRenderingComponent * PointCloudRenderingComponent;

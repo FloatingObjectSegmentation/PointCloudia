@@ -18,7 +18,7 @@ void UPointCloudRenderingComponent::BeginPlay()
 	LoadAndPreparePoints();
 
 	if (UseFancyFeatures) {
-		//LoadRbnnResults();
+		LoadRbnnResults();
 		LoadClassifications();
 		LoadIntensities();
 		LoadDesiredClassColors();
@@ -67,7 +67,7 @@ void UPointCloudRenderingComponent::TickComponent(float DeltaTime, ELevelTick Ti
 			// !!!!!!!!!!!!!!!!!!!!!
 			// WARNING THIS IS NOT CORRECT. WE SHOULD RATHER WAIT ABOUT A MINUTE TO BE SURE THAT THE LAST AUGMENTATION IS COMPLETE.
 			// RIGHT NOW IT WILL ONLY WAIT FOR 500 FRAMES WHICH IS NOT ENOUGH!!!!!!!!
-			StoreAugmentedSamples();
+			AugmentationFinalResultString = StoreAugmentedSamples();
 			RerenderPointCloud();
 		}
 	}
@@ -110,7 +110,7 @@ FString UPointCloudRenderingComponent::StoreAugmentedSamples()
 		Current->DestroyComponent();
 	}
 
-	return Descriptions;
+ 	return Descriptions;
 }
 #pragma endregion
 
@@ -275,6 +275,9 @@ void UPointCloudRenderingComponent::StartAugmentation(FTransform StartingTransfo
 		AugmentablesQueue.Enqueue(x);
 	}
 	AugmentationInProgress = true;
+}
+FString UPointCloudRenderingComponent::GetAugmentationFinalResultString() {
+	return AugmentationFinalResultString;
 }
 #pragma endregion
 
@@ -536,7 +539,9 @@ FString UPointCloudRenderingComponent::AugmentedExampleDescriptionToString(EAugm
 	TArray<FStringFormatArg> args;
 
 	// id
-	args.Add(0);
+	FStringFormatArg id(0);
+	args.Add(id);
+
 
 	// object type
 	FString objectTypeArgString;
@@ -552,7 +557,8 @@ FString UPointCloudRenderingComponent::AugmentedExampleDescriptionToString(EAugm
 	args.Add(objectTypeArg);
 
 	// min_r
-	args.Add(minrbnnr);
+	FStringFormatArg argminrbnnr(minrbnnr);
+	args.Add(argminrbnnr);
 
 	// positions
 	FString PointsString(TEXT(""));
@@ -580,7 +586,8 @@ FString UPointCloudRenderingComponent::AugmentedExampleDescriptionToString(EAugm
 	args.Add(IntensitiesStringArg);
 
 	// id shape min_r positions intensities
-	FString CurrentAugmentedExampleDescription = FString::Format(TEXT("%d %s %.2f %s %s"), args);
+	FString CurrentAugmentedExampleDescription = FString::Printf(TEXT("%d %s %.2f %s %s"),  0, *(objectTypeArg.StringValue), minrbnnr, *PointsString, *IntensitiesString);
+	
 	return CurrentAugmentedExampleDescription;
 }
 #pragma endregion
