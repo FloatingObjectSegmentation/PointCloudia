@@ -67,7 +67,7 @@ void UPointCloudRenderingComponent::TickComponent(float DeltaTime, ELevelTick Ti
 			// !!!!!!!!!!!!!!!!!!!!!
 			// WARNING THIS IS NOT CORRECT. WE SHOULD RATHER WAIT ABOUT A MINUTE TO BE SURE THAT THE LAST AUGMENTATION IS COMPLETE.
 			// RIGHT NOW IT WILL ONLY WAIT FOR 500 FRAMES WHICH IS NOT ENOUGH!!!!!!!!
-			StoreAugmentedSamples();
+			AugmentationFinalResultString = StoreAugmentedSamples();
 			RerenderPointCloud();
 		}
 	}
@@ -275,6 +275,9 @@ void UPointCloudRenderingComponent::StartAugmentation(FTransform StartingTransfo
 		AugmentablesQueue.Enqueue(x);
 	}
 	AugmentationInProgress = true;
+}
+FString UPointCloudRenderingComponent::GetAugmentationFinalResultString() {
+	return AugmentationFinalResultString;
 }
 #pragma endregion
 

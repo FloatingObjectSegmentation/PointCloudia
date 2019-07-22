@@ -129,6 +129,9 @@ FString UOptionMachine::GetLabelsFolderPath() {
 	return path;
 }
 
+FString UOptionMachine::GetFinalAugmentations() {
+	return PointCloudRenderingComponent->GetAugmentationFinalResultString();
+}
 #pragma endregion
 
 

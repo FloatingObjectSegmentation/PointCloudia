@@ -63,6 +63,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 		FString GetLabelsFolderPath();
 
+	UFUNCTION(BlueprintCallable)
+		FString GetFinalAugmentations();
+
 private:
 	UPointCloudRenderingComponent * PointCloudRenderingComponent;
 

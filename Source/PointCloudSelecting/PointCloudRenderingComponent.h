@@ -141,7 +141,7 @@ private:
 
 
 	////// augmentation
-
+	FString AugmentationFinalResultString = TEXT("");
 
 	// augmentables data
 	TArray<TArray<FString>> Augmentables;
@@ -190,6 +190,9 @@ public: // API
 
 	UFUNCTION(BlueprintCallable)
 	void StartAugmentation(FTransform StartingTransform);
+
+	UFUNCTION(BlueprintCallable)
+	FString GetAugmentationFinalResultString();
 
 	
 
