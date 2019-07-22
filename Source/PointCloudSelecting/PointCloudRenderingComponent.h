@@ -96,7 +96,7 @@ private:
 	FString PointCloudIntensityFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\lidar\\449_121intensity.txt");
 	FString FloatingObjectFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\lidar\\rbnnresult449_121.pcd");
 	FString ClassColorsFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\point_cloudia\\colormap.txt");
-	FString AugmentablesFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\augmentation\\augmentation_resultend.txt");
+	FString AugmentablesFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\augmentation\\augmentation_result.txt");
 	FString AugmentedFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\augmentation\\augmented.txt");
 
 	/*FString PointCloudFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\tests\\dmr_augs_merge_test\\result.txt");

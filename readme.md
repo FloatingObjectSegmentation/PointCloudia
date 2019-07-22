@@ -68,6 +68,12 @@ Above you is a pointer that represents the direction of the airplane. It determi
 [RBNN radius]\n
 [\n separated indices of points in original cloud]
 ```
+- **$label** = <int> {0, 1, 2, 3} -> 0=Floating, 1=LikelyFloating, 2=MaybeFloating, 3=NotFloating
+- **$RBNN radius** = <int> - radius in meters
+
+- path to save:
+    - $DIRECTORY(POINT_CLOUD_FILE)/labels/<POINT_CLOUD_FILE_NAME>-<GUID>.txt
+    
 #### Augmentation files
 
 ### Programming trace
