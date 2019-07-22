@@ -110,7 +110,7 @@ FString UPointCloudRenderingComponent::StoreAugmentedSamples()
 		Current->DestroyComponent();
 	}
 
-	return Descriptions;
+ 	return Descriptions;
 }
 #pragma endregion
 
@@ -536,7 +536,9 @@ FString UPointCloudRenderingComponent::AugmentedExampleDescriptionToString(EAugm
 	TArray<FStringFormatArg> args;
 
 	// id
-	args.Add(0);
+	FStringFormatArg id(0);
+	args.Add(id);
+
 
 	// object type
 	FString objectTypeArgString;
@@ -552,7 +554,8 @@ FString UPointCloudRenderingComponent::AugmentedExampleDescriptionToString(EAugm
 	args.Add(objectTypeArg);
 
 	// min_r
-	args.Add(minrbnnr);
+	FStringFormatArg argminrbnnr(minrbnnr);
+	args.Add(argminrbnnr);
 
 	// positions
 	FString PointsString(TEXT(""));
@@ -580,7 +583,8 @@ FString UPointCloudRenderingComponent::AugmentedExampleDescriptionToString(EAugm
 	args.Add(IntensitiesStringArg);
 
 	// id shape min_r positions intensities
-	FString CurrentAugmentedExampleDescription = FString::Format(TEXT("%d %s %.2f %s %s"), args);
+	FString CurrentAugmentedExampleDescription = FString::Printf(TEXT("%d %s %.2f %s %s"),  0, *(objectTypeArg.StringValue), minrbnnr, *PointsString, *IntensitiesString);
+	
 	return CurrentAugmentedExampleDescription;
 }
 #pragma endregion
