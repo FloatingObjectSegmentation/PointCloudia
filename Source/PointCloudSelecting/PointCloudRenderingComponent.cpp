@@ -101,6 +101,7 @@ FString UPointCloudRenderingComponent::StoreAugmentedSamples()
 		EAugmentationObject objectType = Current->ObjectType;
 
 		
+		SpaceTransformLocalToPC(Points);
 		FString CurrentDescription = AugmentedExampleDescriptionToString(objectType, minrbnnr, Points, Scanner);
 
 		Descriptions += CurrentDescription + TEXT("\n");
@@ -477,7 +478,7 @@ void UPointCloudRenderingComponent::Augment(TArray<FString> Augmentable)
 	Values.Empty();
 	Augmentable[2].ParseIntoArray(Values, TEXT(","));
 	FVector scale = FVector(FCString::Atof(*Values[0]), FCString::Atof(*Values[1]), FCString::Atof(*Values[2]));
-	scale = FVector(30.0f, 30.0f, 30.0f);
+	//scale = FVector(30.0, 30.0, 30.0f);
 
 	FString shape = Augmentable[3];
 	EAugmentationObject objectType;
@@ -721,6 +722,14 @@ void UPointCloudRenderingComponent::SpaceTransformPCToLocal(FVector& vec)
 	vec.X = MaxX - vec.X;
 	vec.Y -= MinY;
 	vec.Z -= MinZ;
+}
+
+void UPointCloudRenderingComponent::SpaceTransformLocalToPC(TArray<FVector>& arr) {
+	for (int32 i = 0; i < arr.Num(); i++) {
+		arr[i].X = MaxX - arr[i].X;
+		arr[i].Y += MinY;
+		arr[i].Z += MinZ;
+	}
 }
 #pragma endregion
 

@@ -11,6 +11,7 @@
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
+#include "DrawDebugHelpers.h"
 
 // PROJECT IMPORTS
 #include "RieglLMSQ780.h"

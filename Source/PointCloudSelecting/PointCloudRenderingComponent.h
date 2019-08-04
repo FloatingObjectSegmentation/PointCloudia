@@ -91,12 +91,12 @@ private:
 	bool UseFancyFeatures = true;
 	bool AugmentationInProgress = false;
 
-	FString PointCloudFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\lidar\\449_121.txt");
-	FString PointCloudClassFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\lidar\\449_121class.txt");
-	FString PointCloudIntensityFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\lidar\\449_121intensity.txt");
-	FString FloatingObjectFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\lidar\\rbnnresult449_121.pcd");
+	FString PointCloudFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\lidar\\401_46.txt");
+	FString PointCloudClassFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\lidar\\401_46class.txt");
+	FString PointCloudIntensityFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\lidar\\401_46intensity.txt");
+	FString FloatingObjectFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\lidar\\rbnnresult401_46.pcd");
 	FString ClassColorsFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\point_cloudia\\colormap.txt");
-	FString AugmentablesFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\augmentation\\augmentation_result.txt");
+	FString AugmentablesFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\augmentation\\401_46augmentation_result.txt");
 	FString AugmentedFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\augmentation\\augmented.txt");
 
 	/*FString PointCloudFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\tests\\dmr_augs_merge_test\\result.txt");
@@ -230,6 +230,7 @@ protected: // auxiliary
 	void RecomputeSelectedRbnnClusterParameters();
 	void SpaceTransformPCToLocal(TArray<FPointCloudPoint> &LoadedPoints);
 	void SpaceTransformPCToLocal(FVector& vec);
+	void SpaceTransformLocalToPC(TArray<FVector>& arr);
 	UPointCloud * PrepareRenderingSettings(TArray<FPointCloudPoint> &Points, FString pointCloudName, FString settingsName);
 	void SpawnPointCloudHostActor(FTransform const &SpawningTransform);
 	void GetPointCloudPoints(TArray<FPointCloudPoint> &LoadedPoints);

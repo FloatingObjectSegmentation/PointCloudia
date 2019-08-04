@@ -9,6 +9,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
 #include "Engine/WorldComposition.h"
+#include "DrawDebugHelpers.h"
 
 // PROJECT INCLUDES
 #include "FloatingObject.h"
