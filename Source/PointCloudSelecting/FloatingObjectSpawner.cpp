@@ -48,13 +48,14 @@ AActor* AFloatingObjectSpawner::SpawnFloatingObject(EAugmentationObject objectTy
 	case EAugmentationObject::Balloon:
 		currentType = Balloon;
 		break;
+	case EAugmentationObject::Drone:
+		currentType = Drone;
+		break;
 	}
 
 	//Actual Spawn. The following function returns a reference to the spawned actor
 	AFloatingObject* ActorRef = GetWorld()->SpawnActor<AFloatingObject>(currentType, FTransform(location));
 
-	FVector origin;
-	FVector extent;
 	
 
 	TArray<UStaticMeshComponent*> Components;
@@ -68,12 +69,20 @@ AActor* AFloatingObjectSpawner::SpawnFloatingObject(EAugmentationObject objectTy
 
 	FVector some = ActorRef->GetActorScale3D();
 
-	scaleInMeters = FVector(scaleInMeters[0], scaleInMeters[2], scaleInMeters[1]);
+	FVector scaleInMeters2 = FVector(scaleInMeters[0], scaleInMeters[2], scaleInMeters[1]);
 	FVector newScale = scaleInMeters / extentInScale;
 	ActorRef->SetActorScale3D(newScale);
 
 
+	FVector origin;
+	FVector extent;
 	ActorRef->GetActorBounds(false, origin, extent);
+
+	if (extent[2] > extent[1] && scaleInMeters[1] > scaleInMeters[2]) {
+		newScale = scaleInMeters2 / extentInScale;
+		ActorRef->SetActorScale3D(newScale);
+	}
+
 	//DrawDebugBox(GetWorld(), origin, extent, FColor::Purple, true, -1, 0, 1);
 
 	return ActorRef;

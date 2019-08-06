@@ -13,7 +13,8 @@ enum class EAugmentationObject : uint8
 	Cube						UMETA(DisplayName = "Cube"),
 	Bird						UMETA(DisplayName = "Bird"),
 	Airplane					UMETA(DisplayName = "Airplane"),
-	Balloon						UMETA(DisplayName = "Balloon")
+	Balloon						UMETA(DisplayName = "Balloon"),
+	Drone						UMETA(DisplayName = "Drone")
 };
 
 UCLASS()

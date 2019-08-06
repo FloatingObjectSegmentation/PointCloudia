@@ -491,6 +491,9 @@ void UPointCloudRenderingComponent::Augment(TArray<FString> Augmentable)
 	else if (shape == TEXT("BIRD")) {
 		objectType = EAugmentationObject::Bird;
 	}
+	else if (shape == TEXT("DRONE")) {
+		objectType = EAugmentationObject::Drone;
+	}
 
 	Values.Empty();
     Augmentable[4].ParseIntoArray(Values, TEXT(","));
@@ -506,7 +509,7 @@ void UPointCloudRenderingComponent::Augment(TArray<FString> Augmentable)
 
 
 	// rotation should be the correct one set at the start of the program
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, FString::Printf(TEXT("Scanning position: %.2f,%.2f,%.2f; rbnn_minval: %.2f"), position.X, position.Y, position.Z, rbnn_r_min));
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, FString::Printf(TEXT("Scanning position: %.2f,%.2f,%.2f; rbnn_minval: %.2f, type: %s"), position.X, position.Y, position.Z, rbnn_r_min, *shape));
 	comp->StartScanning(airplane_pos + FVector(0.0f, 0.0f, 500.0f), AugmentationStartingTransform.Rotator(), position, scale, objectType, rbnn_r_min);
 
 }

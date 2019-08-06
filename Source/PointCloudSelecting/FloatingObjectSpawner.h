@@ -34,6 +34,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 		TSubclassOf<AFloatingObject> Balloon;
+
+	UPROPERTY(EditDefaultsOnly)
+		TSubclassOf<AFloatingObject> Drone;
 	
 	AActor* SpawnFloatingObject(EAugmentationObject objectType, FVector location, FVector scaleInMeters);
 
