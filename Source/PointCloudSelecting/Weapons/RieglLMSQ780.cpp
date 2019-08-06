@@ -43,12 +43,13 @@ void URieglLMSQ780::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	FVector RayCastStart, RayCastEnd;
+
 	for (int i = 0; i < StepsPerFrame; i++) {
 
 		// break if enough distance traveled
 		CurrentDistanceTraveled += dPoint;
 		if (CurrentDistanceTraveled > MaxDistanceTraveled) {
-			UE_LOG(LogTemp, Warning, TEXT("AUGMENTATION COMPLETED"));
+			//UE_LOG(LogTemp, Warning, TEXT("AUGMENTATION COMPLETED"));
 			return;
 		}
 
@@ -59,7 +60,7 @@ void URieglLMSQ780::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 		// update rotation direction if max reached
 		double thresh = PhiMaxRadians;
 		double distance = acos(Dot3(Down, DirectionIntermediate));
-		UE_LOG(LogTemp, Warning, TEXT("%f"), sqrt(pow(Direction.X, 2) + pow(Direction.Y, 2) + pow(Direction.Z, 2)));
+		//UE_LOG(LogTemp, Warning, TEXT("%f"), sqrt(pow(Direction.X, 2) + pow(Direction.Y, 2) + pow(Direction.Z, 2)));
 		if (distance > thresh) {
 			Alpha = -Alpha;
 			RecalcRotationMatrix();
@@ -90,14 +91,14 @@ void URieglLMSQ780::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 			Intensities.Add(intensity);
 		}
 	}
-	DrawDebugLine(GetWorld(),
+	/*DrawDebugLine(GetWorld(),
 		RayCastStart,
 		RayCastEnd,
 		FColor(255, 0, 0),
 		false,
 		0.f,
 		0.f,
-		10.0f);
+		10.0f);*/
 
 	/*RerenderCounter++;
 	if (RerenderCounter % RerenderInterval == 0) {

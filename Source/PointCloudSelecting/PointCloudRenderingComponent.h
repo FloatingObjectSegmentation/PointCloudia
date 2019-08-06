@@ -150,6 +150,9 @@ private:
 
 	FTransform AugmentationStartingTransform;
 
+	int32 AugmentablesCount;
+	int32 AugmentablesAugmented;
+
 	#pragma endregion
 
 public:	

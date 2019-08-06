@@ -44,7 +44,7 @@ public:
 	FVector StartingPoint;
 	float SpeedX = 90.0f; // [m/s]
 	int SpeedAngular = 27; // [lines/s]
-	int Frequency = 40000; // [Hz]
+	int Frequency = 400000; // [Hz]
 	int PhiMaxDegrees = 30; // [deg]
 	float MaxDistanceTraveled = 50.0f; // [m]
 

@@ -34,6 +34,9 @@ void UPointCloudRenderingComponent::BeginPlay()
 	UE_LOG(LogTemp, Warning, TEXT("Point loaded %s"), *LoadedPoints[0].Color.ToString());
 }
 
+int32 pause_counter = 0;
+int32 SavingIntervalFrames = 10000;
+
 void UPointCloudRenderingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -56,27 +59,43 @@ void UPointCloudRenderingComponent::TickComponent(float DeltaTime, ELevelTick Ti
 
 	// AUGMENTATION ASYNCHRONOUS MECHANISM - EVERY 500 FRAMES THE NEXT ONE GETS SPAWNED
 	if (AugmentationInProgress) {
-		if (time % 500 != 0) return;
+		
+
+		if (AugmentablesQueue.IsEmpty()) {
+			AugmentationInProgress = false;
+			return;
+		}
+		
+		// save batch every n frames
+		if (time % SavingIntervalFrames == 0 || pause_counter > 0) {
+			// prepare to save batch
+			pause_counter++;
+		}
+		if (pause_counter == 3000) {
+			AugmentationFinalResultString += StoreAugmentedSamples();
+			RerenderPointCloud();
+			pause_counter = 0;
+		}
+		if (pause_counter > 0) return;
+
+
+		// load another augmentable if it's not time to save
+		if (time % 1000 != 0) return;
+
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("TIME PASSED: %d"), time));
+
 		if (!AugmentablesQueue.IsEmpty()) {
 			UE_LOG(LogTemp, Warning, TEXT("AUGMENTING SYNTHETIC EXAMPLE"));
 			TArray<FString> item;
 			AugmentablesQueue.Dequeue(item);
 			Augment(item);
 		}
-		else {
-			// !!!!!!!!!!!!!!!!!!!!!
-			// WARNING THIS IS NOT CORRECT. WE SHOULD RATHER WAIT ABOUT A MINUTE TO BE SURE THAT THE LAST AUGMENTATION IS COMPLETE.
-			// RIGHT NOW IT WILL ONLY WAIT FOR 500 FRAMES WHICH IS NOT ENOUGH!!!!!!!!
-			AugmentationFinalResultString = StoreAugmentedSamples();
-			RerenderPointCloud();
-		}
 	}
 
 }
 FString UPointCloudRenderingComponent::StoreAugmentedSamples()
 {
-	UE_LOG(LogTemp, Warning, TEXT("FINISHING AUGMENTATION"));
-	AugmentationInProgress = false;
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("STORING NEXT BATCH OF AUGMENTATIONS")));
 
 	TArray<UAugmentationMachineComponent*> Components;
 	GetOwner()->GetComponents<UAugmentationMachineComponent>(Components);
@@ -105,11 +124,14 @@ FString UPointCloudRenderingComponent::StoreAugmentedSamples()
 		FString CurrentDescription = AugmentedExampleDescriptionToString(objectType, minrbnnr, Points, Scanner);
 
 		Descriptions += CurrentDescription + TEXT("\n");
+		
 
 		Scanner->GetOwner()->Destroy();
 		Current->AugmentedObject->Destroy();
 		Current->DestroyComponent();
+		AugmentablesAugmented++;
 	}
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("CURRENT AUGMENTATIONS FINISHED: %d out of %d"), AugmentablesAugmented, AugmentablesCount));
 
  	return Descriptions;
 }
@@ -522,7 +544,7 @@ void UPointCloudRenderingComponent::LoadAugmentables()
 	// split by lines
 	TArray<FString> Lines;
 	AugmentablesFileContent.ParseIntoArray(Lines, TEXT("\n"));
-
+	AugmentablesCount = Lines.Num();
 	// store all lines into array
 	for (int32 lineIdx = 0; lineIdx < Lines.Num(); lineIdx++) {
 		FString CurrentLine = Lines[lineIdx];
