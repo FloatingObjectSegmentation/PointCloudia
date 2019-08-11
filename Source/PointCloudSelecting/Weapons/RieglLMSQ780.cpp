@@ -79,16 +79,19 @@ void URieglLMSQ780::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 		// save the intensity and location
 		for (int32 i = 0; i < Hits.Num(); i++) {
 
-			FVector SurfaceNormal = Hits[i].ImpactNormal;
-			FVector HitDirection = -Direction;
-			SurfaceNormal.Normalize();
-			HitDirection.Normalize();
+			if (Hits[i].GetActor() == augmentedObject) {
+				FVector SurfaceNormal = Hits[i].ImpactNormal;
+				FVector HitDirection = -Direction;
+				SurfaceNormal.Normalize();
+				HitDirection.Normalize();
+				
+				float intensity = Dot3(SurfaceNormal, HitDirection);
+				FVector location = Hits[i].Location;
 
-			float intensity = Dot3(SurfaceNormal, HitDirection);
-			FVector location = Hits[i].Location;
+				Points.Add(location);
+				Intensities.Add(intensity);
+			}
 
-			Points.Add(location);
-			Intensities.Add(intensity);
 		}
 	}
 	/*DrawDebugLine(GetWorld(),

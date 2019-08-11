@@ -45,6 +45,7 @@ void UAugmentationMachineComponent::StartScanning(FVector airplaneLocation, FRot
 	AugmentedObject = Spawner->SpawnFloatingObject(ObjectType, objectLocation, objectScaleInMeters);
 
 	URieglLMSQ780* comp = NewObject<URieglLMSQ780>(Airplane);
+	comp->SetAugmentedObject(AugmentedObject);
 	comp->RegisterComponent();
 	Airplane->AddOwnedComponent(comp);
 }

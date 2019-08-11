@@ -10,6 +10,7 @@
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
 #include "Engine/StaticMeshActor.h"
 #include "PointCloud.h"
+#include "../FloatingObject.h"
 #include "RieglLMSQ780.generated.h"
 
 
@@ -21,6 +22,7 @@ class POINTCLOUDSELECTING_API URieglLMSQ780 : public UActorComponent
 public:
 	// Sets default values for this component's properties
 	URieglLMSQ780();
+	AActor* augmentedObject;
 
 protected:
 	// Called when the game starts
@@ -32,7 +34,10 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	//hi
+	// set augmented object
+	void SetAugmentedObject(AActor* floatingObject) {
+		augmentedObject = floatingObject;
+	}
 
 	// external components
 	int RerenderInterval = 5;
