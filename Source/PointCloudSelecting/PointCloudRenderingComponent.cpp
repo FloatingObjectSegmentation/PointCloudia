@@ -322,7 +322,7 @@ void UPointCloudRenderingComponent::RerenderPointCloud()
 		float Rnorm = LoadedPoints[i].Color.R / 256.0f;
 		float Gnorm = LoadedPoints[i].Color.G / 256.0f;
 		float Bnorm = LoadedPoints[i].Color.B / 256.0f;
-		LoadedPoints[i].Location.Z = 0.0f;
+		//LoadedPoints[i].Location.Z = 0.0f;
 		NewPointCloud.Emplace(LoadedPoints[i].Location.X, LoadedPoints[i].Location.Y, LoadedPoints[i].Location.Z,
 			Rnorm, Gnorm, Bnorm);
 	}
@@ -529,11 +529,35 @@ void UPointCloudRenderingComponent::Augment(TArray<FString> Augmentable)
 	comp->RegisterComponent();
 	GetOwner()->AddOwnedComponent(comp);
 
+	FRotator rotation;
+	if (AugmentationEstimationMode == EAugmentationDirectionEstimationMode::AugmentationStarter) {
+		rotation = AugmentationStartingTransform.Rotator();
+	}
+	else {
 
+		Augmentable[6].ParseIntoArray(Values, TEXT(","));
+		FVector pt1 = FVector(FCString::Atof(*Values[0]), FCString::Atof(*Values[1]), 0.0f);
+		SpaceTransformPCToLocal(pt1);
+
+		Augmentable[7].ParseIntoArray(Values, TEXT(","));
+		FVector pt2 = FVector(FCString::Atof(*Values[0]), FCString::Atof(*Values[1]), 0.0f);
+		SpaceTransformPCToLocal(pt2);
+
+		DrawDebugLine(GetWorld(),
+			pt1,
+			pt2,
+			FColor(255, 0, 0),
+			true,
+			0.f,
+			0.f,
+			15.0f);
+
+		rotation = UKismetMathLibrary::MakeRotationFromAxes(FVector(0.0f, 0.0f, 0.0f), pt1 - pt2, FVector(0.0f, 0.0f, 0.0f));
+	}
 
 	// rotation should be the correct one set at the start of the program
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, FString::Printf(TEXT("Scanning position: %.2f,%.2f,%.2f; rbnn_minval: %.2f, type: %s"), position.X, position.Y, position.Z, rbnn_r_min, *shape));
-	comp->StartScanning(airplane_pos + FVector(0.0f, 0.0f, 1000.0f), AugmentationStartingTransform.Rotator(), position, scale, objectType, rbnn_r_min);
+	comp->StartScanning(airplane_pos + FVector(0.0f, 0.0f, 1000.0f), rotation, position, scale, objectType, rbnn_r_min);
 
 }
 

@@ -94,14 +94,14 @@ void URieglLMSQ780::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 
 		}
 	}
-	/*DrawDebugLine(GetWorld(),
+	DrawDebugLine(GetWorld(),
 		RayCastStart,
 		RayCastEnd,
 		FColor(255, 0, 0),
 		false,
 		0.f,
 		0.f,
-		10.0f);*/
+		10.0f);
 
 	/*RerenderCounter++;
 	if (RerenderCounter % RerenderInterval == 0) {
