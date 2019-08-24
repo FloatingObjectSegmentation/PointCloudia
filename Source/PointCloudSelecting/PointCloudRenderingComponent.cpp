@@ -322,6 +322,7 @@ void UPointCloudRenderingComponent::RerenderPointCloud()
 		float Rnorm = LoadedPoints[i].Color.R / 256.0f;
 		float Gnorm = LoadedPoints[i].Color.G / 256.0f;
 		float Bnorm = LoadedPoints[i].Color.B / 256.0f;
+		LoadedPoints[i].Location.Z = 0.0f;
 		NewPointCloud.Emplace(LoadedPoints[i].Location.X, LoadedPoints[i].Location.Y, LoadedPoints[i].Location.Z,
 			Rnorm, Gnorm, Bnorm);
 	}
@@ -532,7 +533,7 @@ void UPointCloudRenderingComponent::Augment(TArray<FString> Augmentable)
 
 	// rotation should be the correct one set at the start of the program
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, FString::Printf(TEXT("Scanning position: %.2f,%.2f,%.2f; rbnn_minval: %.2f, type: %s"), position.X, position.Y, position.Z, rbnn_r_min, *shape));
-	comp->StartScanning(airplane_pos + FVector(0.0f, 0.0f, 500.0f), AugmentationStartingTransform.Rotator(), position, scale, objectType, rbnn_r_min);
+	comp->StartScanning(airplane_pos + FVector(0.0f, 0.0f, 1000.0f), AugmentationStartingTransform.Rotator(), position, scale, objectType, rbnn_r_min);
 
 }
 

@@ -74,6 +74,13 @@ enum class EAugmentationMode : uint8
 	RenderAugmentationOnly  	    UMETA(DisplayName = "RenderAugmentationOnly")
 };
 
+UENUM(BlueprintType)		//"BlueprintType" is essential to include
+enum class EAugmentationDirectionEstimationMode : uint8
+{
+	AugmentationStarter 					UMETA(DisplayName = "AugmentationStarter"),
+	DirectionEstimations    				UMETA(DisplayName = "DirectionEstimations"),
+};
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class POINTCLOUDSELECTING_API UPointCloudRenderingComponent : public UActorComponent
 {
@@ -91,12 +98,12 @@ private:
 	bool UseFancyFeatures = true;
 	bool AugmentationInProgress = false;
 
-	FString PointCloudFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\lidar\\464_132.txt");
-	FString PointCloudClassFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\lidar\\464_132class.txt");
-	FString PointCloudIntensityFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\lidar\\464_132intensity.txt");
-	FString FloatingObjectFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\lidar\\rbnnresult464_132.pcd");
+	FString PointCloudFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\lidar\\401_46.txt");
+	FString PointCloudClassFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\lidar\\401_46class.txt");
+	FString PointCloudIntensityFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\lidar\\401_46intensity.txt");
+	FString FloatingObjectFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\lidar\\rbnnresult401_46.pcd");
 	FString ClassColorsFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\point_cloudia\\colormap.txt");
-	FString AugmentablesFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\augmentation\\464_132augmentation_result.txt");
+	FString AugmentablesFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\augmentation\\401_46augmentation_result.txt");
 	FString AugmentedFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\augmentation\\augmented.txt");
 
 	/*FString PointCloudFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\tests\\dmr_augs_merge_test\\result.txt");
