@@ -15,28 +15,54 @@ void UPointCloudRenderingComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	LoadAndPreparePoints();
+	if (AugmentationMode == EAugmentationMode::AugmentationMulti) {
 
-	if (UseFancyFeatures) {
-		LoadRbnnResults();
-		LoadClassifications();
-		LoadIntensities();
-		LoadDesiredClassColors();
+		TSet<FString> LidarFolderDatasets = GetNamesOfDatasetsFromFolder(PointCloudWorkspaceDirectoryPath);
+		TSet<FString> AlreadyAugmentedDataset = GetNamesOfDatasetsFromFolder(AugmentedStoreDirectory);
+		for (auto& Elem : AlreadyAugmentedDataset)
+		{
+			LidarFolderDatasets.Remove(Elem);
+		}
+		for (auto& Elem : LidarFolderDatasets)
+		{
+			DatasetsToAugment.Enqueue(Elem);
+		}
+		
+		
+
 	}
-
-	if (AugmentationMode == EAugmentationMode::Augmentation) {
-		UE_LOG(LogTemp, Warning, TEXT("LOADING AUGMENTATABLES"));
-		LoadAugmentables();
-	}
-
-	RerenderPointCloud();
-
-	UE_LOG(LogTemp, Warning, TEXT("Point loaded %s"), *LoadedPoints[0].Color.ToString());
+	else {
+		InitializeProgram();
+	}	
 }
+
+TSet<FString> UPointCloudRenderingComponent::GetNamesOfDatasetsFromFolder(FString Folder) {
+	TSet<FString> AllDatasets;
+
+	TArray<FString> output;
+	output.Empty();
+	FFileManagerGeneric::Get().FindFiles(output, *Folder.Append(TEXT("*")), true, false);
+
+	const FRegexPattern Pattern(TEXT("[0-9]{3}[_]{1}[0-9]{2,3}"));
+
+	// using all files in folder find the set of all dataset names
+	for (int i = 0; i < output.Num(); i++) {
+		
+		FRegexMatcher Matcher(Pattern, *output[i]);
+		if (Matcher.FindNext()) {
+			int32 a = Matcher.GetMatchBeginning();
+			int32 b = Matcher.GetMatchEnding();
+			FString MatchedString = output[i].Mid(a, b - a);
+			AllDatasets.Add(*MatchedString);
+		}
+	}
+
+	return AllDatasets;
+}
+
 
 int32 pause_counter = 0;
 int32 SavingIntervalFrames = 10000;
-
 void UPointCloudRenderingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -305,6 +331,25 @@ FString UPointCloudRenderingComponent::GetAugmentationFinalResultString() {
 #pragma endregion
 
 #pragma region auxiliary
+void UPointCloudRenderingComponent::InitializeProgram() {
+	LoadAndPreparePoints();
+
+	if (UseFancyFeatures) {
+		LoadRbnnResults();
+		LoadClassifications();
+		LoadIntensities();
+		LoadDesiredClassColors();
+	}
+
+	if (AugmentationMode == EAugmentationMode::Augmentation) {
+		UE_LOG(LogTemp, Warning, TEXT("LOADING AUGMENTATABLES"));
+		LoadAugmentables();
+	}
+
+	RerenderPointCloud();
+
+	UE_LOG(LogTemp, Warning, TEXT("Point loaded %s"), *LoadedPoints[0].Color.ToString());
+}
 void UPointCloudRenderingComponent::LoadAndPreparePoints()
 {
 	GetPointCloudPoints(LoadedPoints);
