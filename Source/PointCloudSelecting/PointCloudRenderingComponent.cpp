@@ -551,8 +551,13 @@ void UPointCloudRenderingComponent::Augment(TArray<FString> Augmentable)
 			0.f,
 			0.f,
 			15.0f);
+		
+		FVector right = pt1 - pt2;
+		right.Normalize();
+		FVector up = FVector(0.0f, 0.0f, 1.0f);
+		FVector forward = FVector::CrossProduct(right, up);
 
-		rotation = UKismetMathLibrary::MakeRotationFromAxes(FVector(0.0f, 0.0f, 0.0f), pt1 - pt2, FVector(0.0f, 0.0f, 0.0f));
+		rotation = UKismetMathLibrary::MakeRotationFromAxes(forward, right, up);
 	}
 
 	// rotation should be the correct one set at the start of the program
