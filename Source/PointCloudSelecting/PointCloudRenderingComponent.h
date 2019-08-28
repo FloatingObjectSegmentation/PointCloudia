@@ -95,21 +95,24 @@ public:
 	EAugmentationMode AugmentationMode = EAugmentationMode::AugmentationMulti;
 	EAugmentationDirectionEstimationMode AugmentationEstimationMode = EAugmentationDirectionEstimationMode::DirectionEstimations;
 
+	bool CommenceSavingAugmentations = false;
+
 private:
 
 	#pragma region [configuration]
 	int time = 0;
 	bool UseFancyFeatures = true;
 
-	FString PointCloudWorkspaceDirectoryPath = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\lidar\\");
-	FString AugmentedStoreDirectory = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\augmentation\\augmentations\\");
-	FString AugmentableDirectory = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\augmentation\\augmentables\\");
+	FString WorkspaceDirectoryPath = TEXT("E:\\workspaces\\test_workspace\\");
+	FString PointCloudLidarFilesDirectoryPath = WorkspaceDirectoryPath + TEXT("lidar\\");
+	FString AugmentedStoreDirectory = WorkspaceDirectoryPath + TEXT("augmentation\\augmentations\\");
+	FString AugmentableDirectory = WorkspaceDirectoryPath + TEXT("augmentation\\augmentables\\");
 	FString ClassColorsFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\point_cloudia\\colormap.txt");
-
-	FString PointCloudFile = PointCloudWorkspaceDirectoryPath + TEXT("386_95.txt");
-	FString PointCloudClassFile = PointCloudWorkspaceDirectoryPath + TEXT("386_95class.txt");
-	FString PointCloudIntensityFile = PointCloudWorkspaceDirectoryPath + TEXT("386_95intensity.txt");
-	FString FloatingObjectFile = PointCloudWorkspaceDirectoryPath + TEXT("rbnnresult386_95.pcd");
+	
+	FString PointCloudFile = PointCloudLidarFilesDirectoryPath + TEXT("386_95.txt");
+	FString PointCloudClassFile = PointCloudLidarFilesDirectoryPath + TEXT("386_95class.txt");
+	FString PointCloudIntensityFile = PointCloudLidarFilesDirectoryPath + TEXT("386_95intensity.txt");
+	FString FloatingObjectFile = PointCloudLidarFilesDirectoryPath + TEXT("rbnnresult386_95.pcd");
 	
 	FString AugmentablesFile = AugmentableDirectory + TEXT("386_95augmentation_result.txt");
 	FString AugmentedFile = AugmentedStoreDirectory + TEXT("augmented.txt");
@@ -208,8 +211,6 @@ public: // API
 	UFUNCTION(BlueprintCallable)
 	FString GetAugmentationFinalResultString();
 
-	
-
 
 protected: // auxiliary
 
@@ -257,5 +258,6 @@ protected: // auxiliary
 	void FindSelectionIndices(FVector & CenterInWorldSpace, FVector & BoundingBox, TArray<int32> &QueryResultIndices);
 	FString SelectedPointsToPointCloudTxtFormatString(TArray<FPointCloudPoint> PointsToSave);
 	TSet<FString> GetNamesOfDatasetsFromFolder(FString Folder);
+	bool TakeNextDataset();
 	
 };

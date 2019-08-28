@@ -132,6 +132,16 @@ FString UOptionMachine::GetLabelsFolderPath() {
 FString UOptionMachine::GetFinalAugmentations() {
 	return PointCloudRenderingComponent->GetAugmentationFinalResultString();
 }
+
+
+bool UOptionMachine::GetCommenceSavingAugmentations() {
+	return PointCloudRenderingComponent->CommenceSavingAugmentations;
+}
+
+
+void UOptionMachine::SetCommenceSavingAugmentations(bool state) {
+	PointCloudRenderingComponent->CommenceSavingAugmentations = state;
+}
 #pragma endregion
 
 
