@@ -23,7 +23,9 @@
 #include "Runtime/Engine/Classes/Engine/Engine.h"
 #include "Runtime/Engine/Classes/Kismet/KismetMathLibrary.h"
 #include "Engine/StaticMeshActor.h"
+#include "Runtime/Core/Public/HAL/FileManagerGeneric.h"
 #include "Components/StaticMeshComponent.h"
+#include "Runtime/Core/Public/Internationalization/Regex.h"
 #include "Runtime/Engine/Classes/Materials/MaterialInstanceDynamic.h"
 
 // EXTERNAL IMPORTS
@@ -71,14 +73,15 @@ enum class EAugmentationMode : uint8
 {
 	NoAugmentation 					UMETA(DisplayName = "NoAugmentation"),
 	Augmentation    				UMETA(DisplayName = "Augmentation"),
-	RenderAugmentationOnly  	    UMETA(DisplayName = "RenderAugmentationOnly")
+	RenderAugmentationOnly  	    UMETA(DisplayName = "RenderAugmentationOnly"),
+	AugmentationMulti				UMETA(DisplayName = "AugmentationMulti")
 };
 
 UENUM(BlueprintType)		//"BlueprintType" is essential to include
 enum class EAugmentationDirectionEstimationMode : uint8
 {
 	AugmentationStarter 					UMETA(DisplayName = "AugmentationStarter"),
-	DirectionEstimations    				UMETA(DisplayName = "DirectionEstimations"),
+	DirectionEstimations    				UMETA(DisplayName = "DirectionEstimations")
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -89,32 +92,30 @@ class POINTCLOUDSELECTING_API UPointCloudRenderingComponent : public UActorCompo
 public:
 	EFilterModeEnum FilterMode = EFilterModeEnum::None;
 	EFloatingSegmentColorMode FloatingSegmentColorMode = EFloatingSegmentColorMode::None;
-	EAugmentationMode AugmentationMode = EAugmentationMode::Augmentation;
+	EAugmentationMode AugmentationMode = EAugmentationMode::AugmentationMulti;
 	EAugmentationDirectionEstimationMode AugmentationEstimationMode = EAugmentationDirectionEstimationMode::DirectionEstimations;
+
+	bool CommenceSavingAugmentations = false;
 
 private:
 
 	#pragma region [configuration]
 	int time = 0;
 	bool UseFancyFeatures = true;
-	bool AugmentationInProgress = false;
 
-	FString PointCloudFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\lidar\\386_95.txt");
-	FString PointCloudClassFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\lidar\\386_95class.txt");
-	FString PointCloudIntensityFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\lidar\\386_95intensity.txt");
-	FString FloatingObjectFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\lidar\\rbnnresult386_95.pcd");
+	FString WorkspaceDirectoryPath = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\");
+	FString PointCloudLidarFilesDirectoryPath = WorkspaceDirectoryPath + TEXT("lidar\\");
+	FString AugmentedStoreDirectory = WorkspaceDirectoryPath + TEXT("lidar\\augmentation\\");
+	FString AugmentableDirectory = WorkspaceDirectoryPath + TEXT("augmentation\\augmentables\\");
 	FString ClassColorsFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\point_cloudia\\colormap.txt");
-	FString AugmentablesFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\augmentation\\386_95augmentation_result.txt");
-	FString AugmentedFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\augmentation\\augmented.txt");
-
-	/*FString PointCloudFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\tests\\dmr_augs_merge_test\\result.txt");
-	FString PointCloudClassFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\tests\\dmr_augs_merge_test\\resultclass.txt");
-	FString PointCloudIntensityFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\tests\\dmr_augs_merge_test\\resultintensity.txt");
-	FString FloatingObjectFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\tests\\dmr_augs_merge_test\\resultrbnn.txt");
-
-	FString ClassColorsFile = TEXT("C:\\Users\\km\\Desktop\\MAG\\FloatingObjectFilter\\data\\colormap.txt");
-	FString AugmentablesFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\augmentation\\augmentation_resultend.txt");
-	FString AugmentedFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\augmentation\\augmented.txt");*/
+	
+	FString PointCloudFile = PointCloudLidarFilesDirectoryPath + TEXT("386_95.txt");
+	FString PointCloudClassFile = PointCloudLidarFilesDirectoryPath + TEXT("386_95class.txt");
+	FString PointCloudIntensityFile = PointCloudLidarFilesDirectoryPath + TEXT("386_95intensity.txt");
+	FString FloatingObjectFile = PointCloudLidarFilesDirectoryPath + TEXT("rbnnresult386_95.pcd");
+	
+	FString AugmentablesFile = AugmentableDirectory + TEXT("386_95augmentation_result.txt");
+	FString AugmentedFile = AugmentedStoreDirectory + TEXT("augmented.txt");
 	#pragma endregion
 
 	#pragma region [locals]
@@ -149,6 +150,8 @@ private:
 
 
 	////// augmentation
+	bool AugmentationInProgress = false;
+
 	FString AugmentationFinalResultString = TEXT("");
 
 	// augmentables data
@@ -160,6 +163,9 @@ private:
 
 	int32 AugmentablesCount;
 	int32 AugmentablesAugmented;
+
+	// augmentable multi mode specific
+	TQueue<FString> DatasetsToAugment;
 
 	#pragma endregion
 
@@ -205,11 +211,11 @@ public: // API
 	UFUNCTION(BlueprintCallable)
 	FString GetAugmentationFinalResultString();
 
-	
-
 
 protected: // auxiliary
 
+
+	void InitializeProgram();
 	void LoadAndPreparePoints();
 
 	void LoadAugmentables();
@@ -251,4 +257,7 @@ protected: // auxiliary
 	TArray<FPointCloudPoint> GetPointSubset(TArray<int32> &QueryResultIndices);
 	void FindSelectionIndices(FVector & CenterInWorldSpace, FVector & BoundingBox, TArray<int32> &QueryResultIndices);
 	FString SelectedPointsToPointCloudTxtFormatString(TArray<FPointCloudPoint> PointsToSave);
+	TSet<FString> GetNamesOfDatasetsFromFolder(FString Folder);
+	bool TakeNextDataset();
+	
 };

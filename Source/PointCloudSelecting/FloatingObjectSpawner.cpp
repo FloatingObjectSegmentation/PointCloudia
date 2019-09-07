@@ -85,6 +85,11 @@ AActor* AFloatingObjectSpawner::SpawnFloatingObject(EAugmentationObject objectTy
 
 	//DrawDebugBox(GetWorld(), origin, extent, FColor::Purple, true, -1, 0, 1);
 
+	// randomise the jaw rotation
+	float yawRotation = FMath::RandRange(0.0f, 360.0f);
+	ActorRef->SetActorRotation(FRotator(0.0f, yawRotation, 0.0f));
+
+
 	return ActorRef;
 }
 #pragma endregion

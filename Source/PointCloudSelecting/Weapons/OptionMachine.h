@@ -66,6 +66,12 @@ public:
 	UFUNCTION(BlueprintCallable)
 		FString GetFinalAugmentations();
 
+	UFUNCTION(BlueprintCallable)
+		bool GetCommenceSavingAugmentations();
+
+	UFUNCTION(BlueprintCallable)
+		void SetCommenceSavingAugmentations(bool state);
+
 private:
 	UPointCloudRenderingComponent * PointCloudRenderingComponent;
 

@@ -15,28 +15,29 @@ void UPointCloudRenderingComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	LoadAndPreparePoints();
+	if (AugmentationMode == EAugmentationMode::AugmentationMulti) {
 
-	if (UseFancyFeatures) {
-		LoadRbnnResults();
-		LoadClassifications();
-		LoadIntensities();
-		LoadDesiredClassColors();
+		TSet<FString> LidarFolderDatasets = GetNamesOfDatasetsFromFolder(PointCloudLidarFilesDirectoryPath);
+		TSet<FString> AlreadyAugmentedDataset = GetNamesOfDatasetsFromFolder(AugmentedStoreDirectory);
+		for (auto& Elem : AlreadyAugmentedDataset)
+		{
+			LidarFolderDatasets.Remove(Elem);
+		}
+		for (auto& Elem : LidarFolderDatasets)
+		{
+			DatasetsToAugment.Enqueue(Elem);
+		}
+		if (!TakeNextDataset()) {
+			UE_LOG(LogTemp, Warning, TEXT("NO DATASETS TO AUGMENT"));
+		}
 	}
-
-	if (AugmentationMode == EAugmentationMode::Augmentation) {
-		UE_LOG(LogTemp, Warning, TEXT("LOADING AUGMENTATABLES"));
-		LoadAugmentables();
-	}
-
-	RerenderPointCloud();
-
-	UE_LOG(LogTemp, Warning, TEXT("Point loaded %s"), *LoadedPoints[0].Color.ToString());
+	InitializeProgram();
 }
 
-int32 pause_counter = 0;
-int32 SavingIntervalFrames = 10000;
 
+bool TerminationProceeding = false;
+int32 terminationCountdown = 3000;
+bool SavingInProgress = false;
 void UPointCloudRenderingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -58,37 +59,49 @@ void UPointCloudRenderingComponent::TickComponent(float DeltaTime, ELevelTick Ti
 	}
 
 	// AUGMENTATION ASYNCHRONOUS MECHANISM - EVERY 500 FRAMES THE NEXT ONE GETS SPAWNED
-	if (AugmentationInProgress) {
+	if (AugmentationMode != EAugmentationMode::NoAugmentation && AugmentationInProgress) {
 		
+		if (TerminationProceeding) {
+			terminationCountdown--;
 
-		if (AugmentablesQueue.IsEmpty()) {
-			AugmentationInProgress = false;
-			return;
+			if (terminationCountdown < 100 && !SavingInProgress) {
+				AugmentationFinalResultString = StoreAugmentedSamples();
+				CommenceSavingAugmentations = true;
+				SavingInProgress = true;
+			}
+
+			if (terminationCountdown < 0) {
+				
+				TerminationProceeding = false;
+				terminationCountdown = 3000;
+				AugmentationInProgress = false;
+				SavingInProgress = false;
+ 				AugmentationFinalResultString = TEXT("");
+
+				if (TakeNextDataset()) {
+					InitializeProgram();
+				}
+			}
+
 		}
-		
-		// save batch every n frames
-		if (time % SavingIntervalFrames == 0 || pause_counter > 0) {
-			// prepare to save batch
-			pause_counter++;
-		}
-		if (pause_counter == 3000) {
-			AugmentationFinalResultString += StoreAugmentedSamples();
-			RerenderPointCloud();
-			pause_counter = 0;
-		}
-		if (pause_counter > 0) return;
+		else {
 
+			if (AugmentablesQueue.IsEmpty()) {
+				TerminationProceeding = true;
+				return;
+			}
 
-		// load another augmentable if it's not time to save
-		if (time % 1000 != 0) return;
+			// load another augmentable if it's not time to save
+			if (time % 1000 != 0) return;
 
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("TIME PASSED: %d"), time));
+			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("TIME PASSED: %d"), time));
 
-		if (!AugmentablesQueue.IsEmpty()) {
-			UE_LOG(LogTemp, Warning, TEXT("AUGMENTING SYNTHETIC EXAMPLE"));
-			TArray<FString> item;
-			AugmentablesQueue.Dequeue(item);
-			Augment(item);
+			if (!AugmentablesQueue.IsEmpty()) {
+				UE_LOG(LogTemp, Warning, TEXT("AUGMENTING SYNTHETIC EXAMPLE"));
+				TArray<FString> item;
+				AugmentablesQueue.Dequeue(item);
+				Augment(item);
+			}
 		}
 	}
 
@@ -305,6 +318,28 @@ FString UPointCloudRenderingComponent::GetAugmentationFinalResultString() {
 #pragma endregion
 
 #pragma region auxiliary
+void UPointCloudRenderingComponent::InitializeProgram() {
+	LoadAndPreparePoints();
+
+	if (UseFancyFeatures) {
+		LoadRbnnResults();
+		LoadClassifications();
+		LoadIntensities();
+		LoadDesiredClassColors();
+	}
+
+	if (AugmentationMode == EAugmentationMode::Augmentation || AugmentationMode == EAugmentationMode::AugmentationMulti) {
+		UE_LOG(LogTemp, Warning, TEXT("LOADING AUGMENTATABLES"));
+		LoadAugmentables();
+		if (AugmentationMode == EAugmentationMode::AugmentationMulti) {
+			StartAugmentation(FTransform());
+		}
+	}
+
+	RerenderPointCloud();
+
+	UE_LOG(LogTemp, Warning, TEXT("Point loaded %s"), *LoadedPoints[0].Color.ToString());
+}
 void UPointCloudRenderingComponent::LoadAndPreparePoints()
 {
 	GetPointCloudPoints(LoadedPoints);
@@ -571,6 +606,8 @@ void UPointCloudRenderingComponent::LoadAugmentables()
 	FString AugmentablesFileContent;
 	FFileHelper::LoadFileToString(AugmentablesFileContent, *AugmentablesFile);
 
+	Augmentables.Empty();
+
 	// split by lines
 	TArray<FString> Lines;
 	AugmentablesFileContent.ParseIntoArray(Lines, TEXT("\n"));
@@ -646,6 +683,48 @@ FString UPointCloudRenderingComponent::AugmentedExampleDescriptionToString(EAugm
 	
 	return CurrentAugmentedExampleDescription;
 }
+
+
+#pragma region [augmentation multi]
+bool UPointCloudRenderingComponent::TakeNextDataset() {
+
+	FString dataset;
+	if (!DatasetsToAugment.Dequeue(dataset)) return false;
+
+	PointCloudFile = PointCloudLidarFilesDirectoryPath + dataset + TEXT(".txt");
+	PointCloudClassFile = PointCloudLidarFilesDirectoryPath + dataset + TEXT("class.txt");
+	PointCloudIntensityFile = PointCloudLidarFilesDirectoryPath + dataset + TEXT("intensity.txt");
+	FloatingObjectFile = PointCloudLidarFilesDirectoryPath + TEXT("rbnnresult") + dataset + TEXT(".pcd");
+
+	AugmentablesFile = AugmentableDirectory + dataset + TEXT("augmentation_result_transformed.txt");
+	AugmentedFile = AugmentedStoreDirectory + dataset + TEXT("augmented.txt");
+	return true;
+}
+
+TSet<FString> UPointCloudRenderingComponent::GetNamesOfDatasetsFromFolder(FString Folder) {
+	TSet<FString> AllDatasets;
+
+	TArray<FString> output;
+	output.Empty();
+	FFileManagerGeneric::Get().FindFiles(output, *Folder.Append(TEXT("*")), true, false);
+
+	const FRegexPattern Pattern(TEXT("[0-9]{3}[_]{1}[0-9]{2,3}"));
+
+	// using all files in folder find the set of all dataset names
+	for (int i = 0; i < output.Num(); i++) {
+
+		FRegexMatcher Matcher(Pattern, *output[i]);
+		if (Matcher.FindNext()) {
+			int32 a = Matcher.GetMatchBeginning();
+			int32 b = Matcher.GetMatchEnding();
+			FString MatchedString = output[i].Mid(a, b - a);
+			AllDatasets.Add(*MatchedString);
+		}
+	}
+
+	return AllDatasets;
+}
+#pragma endregion
 #pragma endregion
 
 #pragma region [processing selection]
