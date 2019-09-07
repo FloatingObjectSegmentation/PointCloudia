@@ -103,9 +103,9 @@ private:
 	int time = 0;
 	bool UseFancyFeatures = true;
 
-	FString WorkspaceDirectoryPath = TEXT("E:\\workspaces\\test_workspace\\");
+	FString WorkspaceDirectoryPath = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\");
 	FString PointCloudLidarFilesDirectoryPath = WorkspaceDirectoryPath + TEXT("lidar\\");
-	FString AugmentedStoreDirectory = WorkspaceDirectoryPath + TEXT("augmentation\\augmentations\\");
+	FString AugmentedStoreDirectory = WorkspaceDirectoryPath + TEXT("lidar\\augmentation\\");
 	FString AugmentableDirectory = WorkspaceDirectoryPath + TEXT("augmentation\\augmentables\\");
 	FString ClassColorsFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\point_cloudia\\colormap.txt");
 	

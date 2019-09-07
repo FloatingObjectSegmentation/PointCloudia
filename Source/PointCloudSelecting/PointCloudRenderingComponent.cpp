@@ -76,7 +76,7 @@ void UPointCloudRenderingComponent::TickComponent(float DeltaTime, ELevelTick Ti
 				terminationCountdown = 3000;
 				AugmentationInProgress = false;
 				SavingInProgress = false;
-				AugmentationFinalResultString = TEXT("");
+ 				AugmentationFinalResultString = TEXT("");
 
 				if (TakeNextDataset()) {
 					InitializeProgram();
