@@ -482,13 +482,25 @@ void UPointCloudRenderingComponent::LoadClassifications()
 }
 void UPointCloudRenderingComponent::LoadIntensities()
 {
-	FString IntensityFileContent;
-	FFileHelper::LoadFileToString(IntensityFileContent, *PointCloudIntensityFile);
-	TArray<FString> Array;
-	IntensityFileContent.ParseIntoArray(Array, TEXT("\n"));
-	for (int32 i = 0; i < Array.Num(); i++) {
-		float IntensityValue = FCString::Atof(*Array[i]);
-		Intensities.Add(IntensityValue);
+	if (!ReplaceIntensitiesByScanAngles) {
+		FString IntensityFileContent;
+		FFileHelper::LoadFileToString(IntensityFileContent, *PointCloudIntensityFile);
+		TArray<FString> Array;
+		IntensityFileContent.ParseIntoArray(Array, TEXT("\n"));
+		for (int32 i = 0; i < Array.Num(); i++) {
+			float IntensityValue = FCString::Atof(*Array[i]);
+			Intensities.Add(IntensityValue);
+		}
+	}
+	else {
+		FString IntensityFileContent;
+		FFileHelper::LoadFileToString(IntensityFileContent, *PointCloudAnglesFile);
+		TArray<FString> Array;
+		IntensityFileContent.ParseIntoArray(Array, TEXT("\n"));
+		for (int32 i = 0; i < Array.Num(); i++) {
+			float IntensityValue = FCString::Atof(*Array[i]);
+			Intensities.Add(IntensityValue);
+		}
 	}
 }
 void UPointCloudRenderingComponent::LoadDesiredClassColors() {
@@ -954,11 +966,67 @@ void UPointCloudRenderingComponent::ColorPoints(TArray<FPointCloudPoint>& Points
 
 void UPointCloudRenderingComponent::ColorPointsByIntensity(TArray<FPointCloudPoint>& Points) {
 	// color the points by the actual underlying class
-	for (int i = 0; i < Intensities.Num(); i++) {
-		float intensity = Intensities[i];
-		Points[i].Color.R = FMath::Min(255.0f, intensity);
-		Points[i].Color.G = 0;
-		Points[i].Color.B = FMath::Min(255.0f, intensity / 256.0f);
+	if (!ReplaceIntensitiesByScanAngles) {
+		for (int i = 0; i < Intensities.Num(); i++) {
+			float intensity = Intensities[i];
+			Points[i].Color.R = FMath::Min(255.0f, intensity);
+			Points[i].Color.G = 0;
+			Points[i].Color.B = FMath::Min(255.0f, intensity / 256.0f);
+		}
+	}
+	else {
+		// these are between -30 and +30
+		
+		for (int i = 0; i < Intensities.Num(); i++) {
+			float angle = Intensities[i];
+			angle = (angle + 30); 
+			float red, green, blue;
+
+			// rainbow spectrum
+			/*// [-30,30] to [0,360]
+			if (angle < 60) { red = 255; green = round(angle*4.25 - 0.01); blue = 0; }
+			else
+				if (angle < 120) { red = round((120 - angle)*4.25 - 0.01); green = 255; blue = 0; }
+				else
+					if (angle < 180) { red = 0, green = 255; blue = round((angle - 120)*4.25 - 0.01); }
+					else
+						if (angle < 240) { red = 0, green = round((240 - angle)*4.25 - 0.01); blue = 255; }
+						else
+							if (angle < 300) { red = round((angle - 240)*4.25 - 0.01), green = 0; blue = 255; }
+							else
+							{
+								red = 255, green = 0; blue = round((360 - angle)*4.25 - 0.01);
+							}
+			*/
+			if (angle < 8) {
+				red = 0, green = 0, blue = 0;
+			}
+			else if (angle < 15) {
+				red = 255, green = 0, blue = 0;
+			}
+			else if (angle < 22) {
+				red = 0, green = 255, blue = 0;
+			}
+			else if (angle < 29) {
+				red = 0, green = 0, blue = 255;
+			}
+			else if (angle < 37) {
+				red = 255, green = 255, blue = 0;
+			}
+			else if (angle < 45) {
+				red = 255, green = 0, blue = 255;
+			}
+			else if (angle < 53) {
+				red = 0, green = 255, blue = 255;
+			}
+			else if (angle < 61) {
+				red = 255, green = 255, blue = 255;
+			}
+
+			Points[i].Color.R = FMath::Min(255.0f, red);
+			Points[i].Color.G = FMath::Min(255.0f, green);
+			Points[i].Color.B = FMath::Min(255.0f, blue);
+		}
 	}
 }
 

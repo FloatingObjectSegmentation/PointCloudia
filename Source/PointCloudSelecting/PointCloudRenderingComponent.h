@@ -92,7 +92,7 @@ class POINTCLOUDSELECTING_API UPointCloudRenderingComponent : public UActorCompo
 public:
 	EFilterModeEnum FilterMode = EFilterModeEnum::None;
 	EFloatingSegmentColorMode FloatingSegmentColorMode = EFloatingSegmentColorMode::None;
-	EAugmentationMode AugmentationMode = EAugmentationMode::AugmentationMulti;
+	EAugmentationMode AugmentationMode = EAugmentationMode::Augmentation;
 	EAugmentationDirectionEstimationMode AugmentationEstimationMode = EAugmentationDirectionEstimationMode::DirectionEstimations;
 
 	bool CommenceSavingAugmentations = false;
@@ -102,6 +102,7 @@ private:
 	#pragma region [configuration]
 	int time = 0;
 	bool UseFancyFeatures = true;
+	bool ReplaceIntensitiesByScanAngles = true;
 
 	FString WorkspaceDirectoryPath = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\");
 	FString PointCloudLidarFilesDirectoryPath = WorkspaceDirectoryPath + TEXT("lidar\\");
@@ -109,12 +110,14 @@ private:
 	FString AugmentableDirectory = WorkspaceDirectoryPath + TEXT("augmentation\\augmentables\\");
 	FString ClassColorsFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\point_cloudia\\colormap.txt");
 	
-	FString PointCloudFile = PointCloudLidarFilesDirectoryPath + TEXT("386_95.txt");
-	FString PointCloudClassFile = PointCloudLidarFilesDirectoryPath + TEXT("386_95class.txt");
-	FString PointCloudIntensityFile = PointCloudLidarFilesDirectoryPath + TEXT("386_95intensity.txt");
-	FString FloatingObjectFile = PointCloudLidarFilesDirectoryPath + TEXT("rbnnresult386_95.pcd");
+	FString PointCloudSingleChunkName = TEXT("391_38");
+	FString PointCloudFile = PointCloudLidarFilesDirectoryPath + PointCloudSingleChunkName + TEXT(".txt");
+	FString PointCloudClassFile = PointCloudLidarFilesDirectoryPath + PointCloudSingleChunkName + TEXT("class.txt");
+	FString PointCloudIntensityFile = PointCloudLidarFilesDirectoryPath + PointCloudSingleChunkName + TEXT("intensity.txt");
+	FString PointCloudAnglesFile = PointCloudLidarFilesDirectoryPath + PointCloudSingleChunkName + TEXT("angle.txt");
+	FString FloatingObjectFile = PointCloudLidarFilesDirectoryPath + TEXT("rbnnresult") + PointCloudSingleChunkName + TEXT(".pcd");
 	
-	FString AugmentablesFile = AugmentableDirectory + TEXT("386_95augmentation_result.txt");
+	FString AugmentablesFile = AugmentableDirectory + PointCloudSingleChunkName + PointCloudSingleChunkName + TEXT("augmentation_result.txt");
 	FString AugmentedFile = AugmentedStoreDirectory + TEXT("augmented.txt");
 	#pragma endregion
 
