@@ -47,7 +47,7 @@ public:
 	// hyperparameters
 	int StepsPerFrame = 100;
 	FVector StartingPoint;
-	float SpeedX = 90.0f; // [m/s]
+	float SpeedX = 46.3f; // [m/s]
 	int SpeedAngular = 27; // [lines/s]
 	int Frequency = 400000; // [Hz]
 	int PhiMaxDegrees = 30; // [deg]

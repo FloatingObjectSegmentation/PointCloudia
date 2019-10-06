@@ -35,8 +35,9 @@ void UPointCloudRenderingComponent::BeginPlay()
 }
 
 
+int32 timeForTermination = 10000;
 bool TerminationProceeding = false;
-int32 terminationCountdown = 3000;
+int32 terminationCountdown = timeForTermination;
 bool SavingInProgress = false;
 void UPointCloudRenderingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
@@ -73,7 +74,7 @@ void UPointCloudRenderingComponent::TickComponent(float DeltaTime, ELevelTick Ti
 			if (terminationCountdown < 0) {
 				
 				TerminationProceeding = false;
-				terminationCountdown = 3000;
+				terminationCountdown = timeForTermination;
 				AugmentationInProgress = false;
 				SavingInProgress = false;
  				AugmentationFinalResultString = TEXT("");

@@ -107,7 +107,7 @@ private:
 	FString WorkspaceDirectoryPath = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\");
 	FString PointCloudLidarFilesDirectoryPath = WorkspaceDirectoryPath + TEXT("lidar\\");
 	FString AugmentedStoreDirectory = WorkspaceDirectoryPath + TEXT("lidar\\augmentation\\");
-	FString AugmentableDirectory = WorkspaceDirectoryPath + TEXT("augmentation\\augmentables\\");
+	FString AugmentableDirectory = WorkspaceDirectoryPath + TEXT("augmentation\\augmentables_scantraces_solutions\\");
 	FString ClassColorsFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\point_cloudia\\colormap.txt");
 	
 	FString PointCloudSingleChunkName = TEXT("391_38");
@@ -117,7 +117,7 @@ private:
 	FString PointCloudAnglesFile = PointCloudLidarFilesDirectoryPath + PointCloudSingleChunkName + TEXT("angle.txt");
 	FString FloatingObjectFile = PointCloudLidarFilesDirectoryPath + TEXT("rbnnresult") + PointCloudSingleChunkName + TEXT(".pcd");
 	
-	FString AugmentablesFile = AugmentableDirectory + PointCloudSingleChunkName + PointCloudSingleChunkName + TEXT("augmentation_result.txt");
+	FString AugmentablesFile = AugmentableDirectory + PointCloudSingleChunkName + TEXT("augmentation_result_transformed.txt");
 	FString AugmentedFile = AugmentedStoreDirectory + TEXT("augmented.txt");
 	#pragma endregion
 
