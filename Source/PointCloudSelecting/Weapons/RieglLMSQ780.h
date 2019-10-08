@@ -48,7 +48,7 @@ public:
 	int StepsPerFrame = 100;
 	FVector StartingPoint;
 	float SpeedX = 46.3f; // [m/s]
-	int SpeedAngular = 27; // [lines/s]
+	int SpeedAngular = 54; // [lines/s]
 	int Frequency = 400000; // [Hz]
 	int PhiMaxDegrees = 30; // [deg]
 	float MaxDistanceTraveled = 50.0f; // [m]

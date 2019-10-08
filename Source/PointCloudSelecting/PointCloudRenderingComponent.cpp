@@ -14,26 +14,11 @@ UPointCloudRenderingComponent::UPointCloudRenderingComponent()
 void UPointCloudRenderingComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
 	if (AugmentationMode == EAugmentationMode::AugmentationMulti) {
-
-		TSet<FString> LidarFolderDatasets = GetNamesOfDatasetsFromFolder(PointCloudLidarFilesDirectoryPath);
-		TSet<FString> AlreadyAugmentedDataset = GetNamesOfDatasetsFromFolder(AugmentedStoreDirectory);
-		for (auto& Elem : AlreadyAugmentedDataset)
-		{
-			LidarFolderDatasets.Remove(Elem);
-		}
-		for (auto& Elem : LidarFolderDatasets)
-		{
-			DatasetsToAugment.Enqueue(Elem);
-		}
-		if (!TakeNextDataset()) {
-			UE_LOG(LogTemp, Warning, TEXT("NO DATASETS TO AUGMENT"));
-		}
+		LoadAllFilesAugmentationMulti();
 	}
 	InitializeProgram();
 }
-
 
 int32 timeForTermination = 10000;
 bool TerminationProceeding = false;
@@ -72,7 +57,7 @@ void UPointCloudRenderingComponent::TickComponent(float DeltaTime, ELevelTick Ti
 			}
 
 			if (terminationCountdown < 0) {
-				
+
 				TerminationProceeding = false;
 				terminationCountdown = timeForTermination;
 				AugmentationInProgress = false;
@@ -95,6 +80,18 @@ void UPointCloudRenderingComponent::TickComponent(float DeltaTime, ELevelTick Ti
 			// load another augmentable if it's not time to save
 			if (time % 1000 != 0) return;
 
+
+			TArray<TArray<FString>> TempAugmentables;
+			while (!AugmentablesQueue.IsEmpty()) {
+				TArray<FString> item;
+				AugmentablesQueue.Dequeue(item);
+				TempAugmentables.Add(item);
+			}
+			for (int32 i = 0; i < TempAugmentables.Num(); i++) {
+				AugmentablesQueue.Enqueue(TempAugmentables[i]);
+			}
+
+
 			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("TIME PASSED: %d"), time));
 
 			if (!AugmentablesQueue.IsEmpty()) {
@@ -106,48 +103,6 @@ void UPointCloudRenderingComponent::TickComponent(float DeltaTime, ELevelTick Ti
 		}
 	}
 
-}
-FString UPointCloudRenderingComponent::StoreAugmentedSamples()
-{
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("STORING NEXT BATCH OF AUGMENTATIONS")));
-
-	TArray<UAugmentationMachineComponent*> Components;
-	GetOwner()->GetComponents<UAugmentationMachineComponent>(Components);
-
-
-	// extract data from the augmentation
-	FString Descriptions;
-	for (int32 i = 0; i < Components.Num(); i++) {
-		UAugmentationMachineComponent* Current = Components[i];
-		TArray<URieglLMSQ780 *> Scanners;
-		Current->Airplane->GetComponents<URieglLMSQ780>(Scanners);
-		URieglLMSQ780* Scanner = Scanners[0];
-
-		TArray<FVector> Points = Scanner->Points;
-		for (int32 i = 0; i < Points.Num(); i++) {
-			LoadedPoints.Add(FPointCloudPoint(Points[i].X, Points[i].Y, Points[i].Z));
-		}
-
-		//////////////////////////////////////////////////////////
-		// save the augmented points into a data structure.
-		float minrbnnr = Current->MinRbnnR;
-		EAugmentationObject objectType = Current->ObjectType;
-
-		
-		SpaceTransformLocalToPC(Points);
-		FString CurrentDescription = AugmentedExampleDescriptionToString(objectType, minrbnnr, Points, Scanner);
-
-		Descriptions += CurrentDescription + TEXT("\n");
-		
-
-		Scanner->GetOwner()->Destroy();
-		Current->AugmentedObject->Destroy();
-		Current->DestroyComponent();
-		AugmentablesAugmented++;
-	}
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("CURRENT AUGMENTATIONS FINISHED: %d out of %d"), AugmentablesAugmented, AugmentablesCount));
-
- 	return Descriptions;
 }
 #pragma endregion
 
@@ -697,8 +652,67 @@ FString UPointCloudRenderingComponent::AugmentedExampleDescriptionToString(EAugm
 	return CurrentAugmentedExampleDescription;
 }
 
+FString UPointCloudRenderingComponent::StoreAugmentedSamples()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("STORING NEXT BATCH OF AUGMENTATIONS")));
+
+	TArray<UAugmentationMachineComponent*> Components;
+	GetOwner()->GetComponents<UAugmentationMachineComponent>(Components);
+
+
+	// extract data from the augmentation
+	FString Descriptions;
+	for (int32 i = 0; i < Components.Num(); i++) {
+		UAugmentationMachineComponent* Current = Components[i];
+		TArray<URieglLMSQ780 *> Scanners;
+		Current->Airplane->GetComponents<URieglLMSQ780>(Scanners);
+		URieglLMSQ780* Scanner = Scanners[0];
+
+		TArray<FVector> Points = Scanner->Points;
+		for (int32 i = 0; i < Points.Num(); i++) {
+			LoadedPoints.Add(FPointCloudPoint(Points[i].X, Points[i].Y, Points[i].Z));
+		}
+
+		//////////////////////////////////////////////////////////
+		// save the augmented points into a data structure.
+		float minrbnnr = Current->MinRbnnR;
+		EAugmentationObject objectType = Current->ObjectType;
+
+
+		SpaceTransformLocalToPC(Points);
+		FString CurrentDescription = AugmentedExampleDescriptionToString(objectType, minrbnnr, Points, Scanner);
+
+		Descriptions += CurrentDescription + TEXT("\n");
+
+
+		Scanner->GetOwner()->Destroy();
+		Current->AugmentedObject->Destroy();
+		Current->DestroyComponent();
+		AugmentablesAugmented++;
+	}
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("CURRENT AUGMENTATIONS FINISHED: %d out of %d"), AugmentablesAugmented, AugmentablesCount));
+
+	return Descriptions;
+}
 
 #pragma region [augmentation multi]
+void UPointCloudRenderingComponent::LoadAllFilesAugmentationMulti()
+{
+	TSet<FString> LidarFolderDatasets = GetNamesOfDatasetsFromFolder(AugmentableDirectory);
+	TSet<FString> AlreadyAugmentedDataset = GetNamesOfDatasetsFromFolder(AugmentedStoreDirectory);
+	for (auto& Elem : AlreadyAugmentedDataset)
+	{
+		LidarFolderDatasets.Remove(Elem);
+	}
+	for (auto& Elem : LidarFolderDatasets)
+	{
+		DatasetsToAugment.Enqueue(Elem);
+	}
+	if (!TakeNextDataset()) {
+		UE_LOG(LogTemp, Warning, TEXT("NO DATASETS TO AUGMENT"));
+	}
+}
+
 bool UPointCloudRenderingComponent::TakeNextDataset() {
 
 	FString dataset;
@@ -709,7 +723,7 @@ bool UPointCloudRenderingComponent::TakeNextDataset() {
 	PointCloudIntensityFile = PointCloudLidarFilesDirectoryPath + dataset + TEXT("intensity.txt");
 	FloatingObjectFile = PointCloudLidarFilesDirectoryPath + TEXT("rbnnresult") + dataset + TEXT(".pcd");
 
-	AugmentablesFile = AugmentableDirectory + dataset + TEXT("augmentation_result_transformed.txt");
+	AugmentablesFile = AugmentableDirectory + dataset + TEXT(".txt");
 	AugmentedFile = AugmentedStoreDirectory + dataset + TEXT("augmented.txt");
 	return true;
 }

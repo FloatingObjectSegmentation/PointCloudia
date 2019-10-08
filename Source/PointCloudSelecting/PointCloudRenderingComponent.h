@@ -92,7 +92,7 @@ class POINTCLOUDSELECTING_API UPointCloudRenderingComponent : public UActorCompo
 public:
 	EFilterModeEnum FilterMode = EFilterModeEnum::None;
 	EFloatingSegmentColorMode FloatingSegmentColorMode = EFloatingSegmentColorMode::None;
-	EAugmentationMode AugmentationMode = EAugmentationMode::Augmentation;
+	EAugmentationMode AugmentationMode = EAugmentationMode::AugmentationMulti;
 	EAugmentationDirectionEstimationMode AugmentationEstimationMode = EAugmentationDirectionEstimationMode::DirectionEstimations;
 
 	bool CommenceSavingAugmentations = false;
@@ -107,7 +107,7 @@ private:
 	FString WorkspaceDirectoryPath = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\");
 	FString PointCloudLidarFilesDirectoryPath = WorkspaceDirectoryPath + TEXT("lidar\\");
 	FString AugmentedStoreDirectory = WorkspaceDirectoryPath + TEXT("lidar\\augmentation\\");
-	FString AugmentableDirectory = WorkspaceDirectoryPath + TEXT("augmentation\\augmentables_scantraces_solutions\\");
+	FString AugmentableDirectory = WorkspaceDirectoryPath + TEXT("augmentation\\augmentables_experiment1_finalsolution\\");
 	FString ClassColorsFile = TEXT("E:\\workspaces\\LIDAR_WORKSPACE\\point_cloudia\\colormap.txt");
 	
 	FString PointCloudSingleChunkName = TEXT("391_38");
@@ -262,5 +262,6 @@ protected: // auxiliary
 	FString SelectedPointsToPointCloudTxtFormatString(TArray<FPointCloudPoint> PointsToSave);
 	TSet<FString> GetNamesOfDatasetsFromFolder(FString Folder);
 	bool TakeNextDataset();
+	void LoadAllFilesAugmentationMulti();
 	
 };
